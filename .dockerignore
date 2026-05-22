@@ -1,0 +1,41 @@
+# Phase 1.6 — Docker build context exclusions.
+# Keep the image small and reproducible; ensure secrets / local-dev data don't
+# leak into the deployed container.
+
+# Local dev data — Railway provides its own volume.
+layer3_trading_exp/data/
+
+# Tests — not needed in production.
+layer3_trading_exp/tests/
+
+# Python build artifacts.
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local secrets — Railway env vars supply the real values.
+.env
+*.env
+layer3_trading_exp/.env
+
+# IDE / editor cruft.
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Documentation (kept in repo, not needed in image).
+*.md
+docs/
+
+# Local SQLite — would override the volume-mounted one if accidentally copied.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Layer 3 source (separate project — should never end up in this image).
+"../ai lang/"

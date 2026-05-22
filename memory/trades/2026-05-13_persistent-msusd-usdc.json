@@ -1,0 +1,15 @@
+{
+  "event_id": "6b962cfe-2cd5-4572-a7c2-70f062aaa643",
+  "block_number": 45929573,
+  "block_timestamp_utc": "2026-05-13T05:14:27.355870+00:00",
+  "signal": "Representative sample of the persistent MSUSD/USDC arb that fired every block for ~2 hours during the pre-index-fix window of EXP-001. Chosen as a calibration example because it is the dominant pattern in our first dataset.",
+  "hypothesis": ["H1", "H3"],
+  "reasoning": "Speaks to H1 because it represents the lower bound of intra-chain opportunity rate on Base — even on a structurally clean monitored set, at least one persistent inefficiency exists at >=0.3% margin. Speaks to H3 because this exact opportunity (Aerodrome Slipstream MSUSD/USDC CL50 ↔ Aerodrome stable MSUSD/USDC, borrowed USDC) had ZERO flag fires across 2,420 emissions — supports the H3 prediction that flagged vs unflagged distributions differ on protocol-combo and token-identity (this one IS the unflagged distribution). Does NOT speak to H2 because every evaluation was layer3_stale=True (UNK-005).",
+  "confidence": 0.95,
+  "action": "If in execution mode (FORBIDDEN by INVARIANTS I-1 in Phase 1): borrow 10,000 USDC via Aave V3 flash loan (0.05% fee = $5), swap to MSUSD via Aerodrome Slipstream CL50, swap MSUSD back to USDC via Aerodrome stable, repay flash loan. Expected net: $25.06 gross gain - $5 flash loan fee - ~$0.005 gas = ~$20.06 net. Hypothetical only.",
+  "outcome": "Arb persisted every block for ~2 hours, then CLOSED during the index-fix outage window (2026-05-13 ~06:19 UTC). Post-restart container has not observed this opp through at least 50 blocks (as of last check). Persistence duration: ~7,200s = 2h. Closure mechanism: unknown (UNK-002 tracks this).",
+  "postmortem": "Hypothesis attribution held up. The single-arb regime in the first 2 hours produces clean H1 lower-bound data, clean H3 unflagged-distribution data, and contributes NOTHING to H2 (which the freshness-threshold issue UNK-005 will need to address structurally). Confidence 0.95 was warranted — this is a reproducible structural inefficiency, not a measurement glitch. If a similar pattern emerges on a new pool pair, it would be worth annotating again to confirm; if MSUSD/USDC reopens, log only the FIRST reopening as a new event_id annotation, not every subsequent emission.",
+  "linked_unknowns": ["UNK-002", "UNK-005"],
+  "linked_decisions": ["D-005"],
+  "schema_version": "trades/SCHEMA.md @ 2026-05-13"
+}

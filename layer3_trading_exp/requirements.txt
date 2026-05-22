@@ -1,0 +1,4 @@
+pytest>=8.0
+web3>=7.0
+eth-abi>=5.0
+websockets>=13.0

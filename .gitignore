@@ -1,0 +1,60 @@
+# Layer 3 Trading Research Experiment — Git ignores.
+# Mirrors .railwayignore + adds local-only items that should never reach
+# GitHub (notably .env files containing API keys + admin tokens, per I-9
+# in memory/INVARIANTS.md).
+
+# Secrets — env files anywhere in the tree.
+.env
+*.env
+**/.env
+
+# Local analysis artifacts pulled from prior runs (40+ MB JSONL files).
+run_artifacts/
+
+# Local dev data — Railway provides its own volume.
+# Contains historical logs that may have rendered URLs with API key segments.
+layer3_trading_exp/data/
+
+# Python build artifacts.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Virtual environments.
+.venv/
+venv/
+env/
+
+# IDE / editor cruft.
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS-level junk.
+*.bak
+*.tmp
+*.log
+
+# Local SQLite databases (Railway volume serves the production copy).
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Sibling Layer 3 source — separate project, must not be vendored in.
+"../ai lang/"
+
+# Railway working files.
+.railway/
+
+# Test outputs.
+.benchmarks/

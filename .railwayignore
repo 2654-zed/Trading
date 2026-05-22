@@ -1,0 +1,53 @@
+# Railway upload exclusions — keep `railway up` fast.
+#
+# Railway's CLI uploads the entire working directory by default, NOT
+# respecting .dockerignore. Without this file the upload includes
+# `run_artifacts/` (analysis JSONL pulled from prior runs, 40+ MB) plus
+# all the local memory / docs files, which silently stalls uploads on
+# normal home bandwidth. This file mirrors the Dockerfile build context
+# (.dockerignore) plus additional Railway-only ignores.
+
+# Local analysis artifacts pulled from prior runs (largest item).
+run_artifacts/
+
+# Local dev data — Railway provides its own volume.
+layer3_trading_exp/data/
+
+# Tests — not needed at runtime.
+layer3_trading_exp/tests/
+
+# Python build artifacts.
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local secrets — Railway env vars supply the real values.
+.env
+*.env
+layer3_trading_exp/.env
+
+# IDE / editor cruft.
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Documentation / memory system — kept in repo, not needed in image.
+*.md
+docs/
+memory/
+
+# Local SQLite — would override the volume-mounted one if accidentally copied.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Sibling Layer 3 source (separate project — should never end up in this image).
+"../ai lang/"
+
+# Railway's own outputs (just in case).
+.railway/
