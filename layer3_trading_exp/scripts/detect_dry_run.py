@@ -107,17 +107,59 @@ class _AlchemyTransport:
     def __init__(self, ws_w3: AsyncWeb3, http_w3: Web3):
         self._w3 = ws_w3
         self._http_w3 = http_w3
+        # Track active newHeads subscription so we can tear it down on
+        # re-subscribe. See subscribe_new_heads() comment for full context.
+        self._active_sub_id: object | None = None
 
     async def subscribe_new_heads(self):
-        await self._w3.eth.subscribe("newHeads")
-        async for msg in self._w3.socket.process_subscriptions():
-            res = msg["result"]
-            num = res["number"]
-            ts = res["timestamp"]
-            yield {
-                "number": int(num, 16) if isinstance(num, str) else int(num),
-                "timestamp": int(ts, 16) if isinstance(ts, str) else int(ts),
-            }
+        # 2026-05-25 spike RCA: pool_monitor.py inner reconnect loop
+        # (line ~480, "subscription-level retry" branch) catches stall
+        # errors and re-calls this method on the SAME ws_w3 instance,
+        # WITHOUT tearing down the WS connection. Each eth_subscribe
+        # call opens a NEW subscription_id; Alchemy keeps delivering
+        # newHeads to every subscription until the underlying TCP
+        # connection closes OR the client explicitly unsubscribes.
+        #
+        # Empirical confirmation: 445M newHeads CU/day on Base from
+        # 2026-05-22 onward (Alchemy "WebSocket usage by Network" chart),
+        # ~129-156 active subscriptions per the math, against an intended
+        # baseline of 1 active newHeads subscription per chain.
+        #
+        # Fix: track the subscription_id and call eth_unsubscribe before
+        # re-subscribing. Also unsubscribe on iterator exit (CancelledError,
+        # escalation, etc.) so the next reconnect cycle starts clean.
+        # All unsubscribe calls are best-effort because the WS may be
+        # dead by the time we try.
+        if self._active_sub_id is not None:
+            try:
+                await self._w3.eth.unsubscribe(self._active_sub_id)
+            except Exception as e:
+                print(f"[_AlchemyTransport] best-effort unsubscribe failed "
+                      f"(continuing): {e}", file=sys.stderr, flush=True)
+            self._active_sub_id = None
+
+        self._active_sub_id = await self._w3.eth.subscribe("newHeads")
+        try:
+            async for msg in self._w3.socket.process_subscriptions():
+                res = msg["result"]
+                num = res["number"]
+                ts = res["timestamp"]
+                yield {
+                    "number": int(num, 16) if isinstance(num, str) else int(num),
+                    "timestamp": int(ts, 16) if isinstance(ts, str) else int(ts),
+                }
+        finally:
+            # On any exit path (cancel, escalation, generator close),
+            # tear down the active subscription. Failures are expected
+            # if the WS is already dead — that's fine, the WS-close
+            # will reap the sub server-side too.
+            if self._active_sub_id is not None:
+                sub_to_close = self._active_sub_id
+                self._active_sub_id = None
+                try:
+                    await self._w3.eth.unsubscribe(sub_to_close)
+                except Exception:
+                    pass
 
     async def call_multicall3(self, call_data: bytes, block: int) -> bytes:
         raw = self._http_w3.eth.call({
