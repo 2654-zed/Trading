@@ -139,6 +139,22 @@ async def _alchemy_transport_factory(chain_label: str, wss_url: str, rpc_url: st
                          f"Set one of: {ENV_VARS_BY_CHAIN[chain_label][1]}.")
     http_w3 = Web3(Web3.HTTPProvider(rpc_url))
     async with AsyncWeb3(WebSocketProvider(wss_url)) as ws_w3:
+        # Per-method Alchemy CU telemetry. Best-effort: never raises into
+        # the hot path. Writes batched aggregates to
+        # /app/data/run_metadata/rpc_telemetry.db. Surveillance counterpart
+        # is in `ai lang/surveillance/rpc_telemetry.py` (commit 7195ea5).
+        # Closes the visibility gap for the 2026-05-22/24 CU spikes.
+        try:
+            from ..rpc_telemetry import wrap_async_web3, wrap_sync_web3
+            wrap_async_web3(ws_w3, component=f"chain_monitor_{chain_label}_ws",
+                            chain=chain_label)
+            wrap_sync_web3(http_w3, component=f"chain_monitor_{chain_label}_http",
+                           chain=chain_label)
+        except Exception as e:
+            print(f"[detect_dry_run] rpc_telemetry wrap failed for "
+                  f"{chain_label} (continuing without telemetry): {e}",
+                  file=sys.stderr, flush=True)
+
         yield _AlchemyTransport(ws_w3, http_w3)
 
 
