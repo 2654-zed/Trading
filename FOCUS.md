@@ -5,7 +5,7 @@
 > dead thread to [docs/ARCHIVE.md](docs/ARCHIVE.md). Discussions happen in
 > **GitHub Issues**, not email — link them below.
 >
-> _Last updated: 2026-06-14_
+> _Last updated: 2026-06-16_
 
 ## Goal
 Find and **rigorously validate** a tradeable signal our team can actually
@@ -38,11 +38,11 @@ documented **NO-GO is an acceptable result**; a curve-fit "yes" is not.
 
 ## Open questions / discussions
 _(Each becomes a GitHub Issue — discuss there, link here, fold the answer back in.)_
-- **Q1 — Universe:** which exchanges / pairs / depth for the study? _(Issue #__)_
+- **Q1 — Universe:** which exchanges / pairs / depth for the study? _([#1](https://github.com/2654-zed/layer3-trading-exp/issues/1))_
 - **Q2 — Tardis ↔ bloXroute:** how do they relate? **Answered:** market-level only (same asset, time-aligned); no tx-level join; CEX-DEX bridge is optional Phase 2. _(see [docs/DATA.md](docs/DATA.md) → "Relating venues")_
-- **Q3 — Storage:** L2 is GBs/day; where do the raw bytes live (drive/bucket)? _(Issue #__)_
-- **Q4 — Success criteria:** what result counts as GO vs. NO-GO for the imbalance study? _(Issue #__)_
-- **Q5 — Repo name:** rename `layer3-trading-exp` (reflects the retired project)? _(Issue #__)_
+- **Q3 — Storage:** L2 is GBs/day; where do the raw bytes live (drive/bucket)? _([#2](https://github.com/2654-zed/layer3-trading-exp/issues/2))_
+- **Q4 — Success criteria:** what result counts as GO vs. NO-GO for the imbalance study? _([#3](https://github.com/2654-zed/layer3-trading-exp/issues/3))_
+- **Q5 — Repo name:** rename `layer3-trading-exp` (reflects the retired project)? _([#4](https://github.com/2654-zed/layer3-trading-exp/issues/4))_
 
 ## Archive
 History and decided-against directions live in **[docs/ARCHIVE.md](docs/ARCHIVE.md)** — kept out of this doc so FOCUS stays current.
