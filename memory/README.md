@@ -9,7 +9,7 @@ layer for the Layer 3 trading experiment. It exists so that:
 - risk is controlled
 - a future autonomous agent can pick up the system without context loss
 
-For codebase documentation, see `Desktop/Trading/LAYER3_TRADING_EXPERIMENT.md`
+For codebase documentation, see `Desktop/Trading/docs/archive/LAYER3_TRADING_EXPERIMENT.md`
 (spec) and `layer3_trading_exp/README.md` (developer overview).
 
 ---

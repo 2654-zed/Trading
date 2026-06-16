@@ -24,7 +24,7 @@ is conditional on what this measurement reveals.
 
 | ID | Statement | Why we think this | What would falsify |
 |---|---|---|---|
-| H2 | Layer 3's intelligence flags ≥1% of detected opportunities | Layer 3 has 90K+ contracts indexed; if any of the pool/token contracts in arb paths overlap with L3's `confirmed`/`suspected` tiers or `org_wallets`/`drain_detected` rows, we'd expect ≥1% intersection. | 0% flag rate after 7 days — would mean either (a) detected opportunities are exclusively on legitimate infrastructure, or (b) L3 corpus has blind spots for the pools we monitor. **Currently WEAKENED — UNK-005 RESOLVED (D-012) so H2 is now structurally testable for 4 of 5 filter-critical tables (`contracts`, `deployers`, `bytecode_families`, `trap_events` all fresh under per-table thresholds). Only `trust_amplification`-dependent rules remain partially degraded due to L3's multi-day cadence on that table.** |
+| H2 | Layer 3's intelligence flags ≥1% of detected opportunities | Layer 3 has 90K+ contracts indexed; if any of the pool/token contracts in arb paths overlap with L3's `confirmed`/`suspected` tiers or `org_wallets`/`drain_detected` rows, we'd expect ≥1% intersection. | 0% flag rate after 7 days. **Currently SUPPORTED-WITH-CAVEAT (D-019, 2026-05-25)** — H2 met by the letter (4.01% overall hard-flag rate; 84.5% on cross-chain emissions across 26,122 EXP-002 records). ALL flags fired Tier-A rule_2 `org_wallet_membership` on a small set of pool addresses, chiefly `0xc6962004f452...` (canonical Arbitrum WETH/USDC Slipstream). The single-pool concentration means H2's "fraction of opportunities flagged" is driven by one structural overlap rather than many independent flags. UNK-010 (`bytecode_families`/`trust_amplification` 100% stale → rule_4/rule_8 always degraded) bounds coverage to 3 of 5 critical tables. UNK-011 (is the rule_2 flag a true positive?) gates Phase 3. H3 distributional comparison is now testable for the first time. |
 | H3 | Flagged opportunities have measurably different margin / pool-type / token distributions than unflagged ones | If L3's signals correlate with risky pool structures, flagged arbs should over-represent (a) low-fee pools used for routing exploits, (b) tokens with asymmetric transfer behavior, (c) pools deployed by `org_001`-adjacent deployers. | Mann-Whitney U p > 0.05 across all numeric fields AND χ² p > 0.05 across categoricals — would mean flagged vs unflagged distributions are indistinguishable, undermining H2's research value. **Currently WEAKENED — no flagged group exists in EXP-001 data; depends on Phase 2 producing variety.** |
 
 ## Invalidated hypotheses
@@ -43,9 +43,42 @@ is conditional on what this measurement reveals.
 - **Data**: 2,420 JSONL records preserved in `run_artifacts/exp_001/`. Phase 1.5 analysis report at `run_artifacts/exp_001_analysis/analysis/report_2026-05-13_2026-05-13.md`.
 - **Deployment**: Railway service removed.
 
-### EXP-002: Phase 2 cross-chain (Arb + Optimism) — **LIVE** (deployed 2026-05-17 17:20 UTC, 7-day run)
+### EXP-003: Phase 3 multi-lens decision engine — **ACTIVE (pre-work in progress)**
 
-- **Status**: **RUNNING** — deployed per D-014; deadline 2026-05-24 ~17:20 UTC.
+- **Status**: Spec **APPROVED** 2026-05-25 (D-020). Mandatory pre-work summary is the current gate before any code.
+- **Spec**: `PHASE_3_MULTI_LENS_ENGINE_SPEC.md` (5 sub-phases 3.1-3.5, 6 new invariants I-15/I-16/I-17/I-18/I-19/I-20, 4 new hypotheses H5/H6/H7/H8, ≥8 pre-staged derivative decisions, separate top-level `engine/` package, bloxroute deferred to Phase 4)
+- **Decisions in place**:
+  - ✅ Phase 2 closeout findings (D-018 UNK-002 reversal, D-019 H2 SUPPORTED-WITH-CAVEAT) motivating the lens-engine pivot
+  - ✅ Spec approval: **D-020**
+  - ✅ Engine ships as separate `engine/` package at repo root
+  - ✅ Existing Alchemy + L3 data path used; bloxroute swap deferred to Phase 4 after engine is built
+  - ✅ Execution layer (sub-phase 3.4) gated behind explicit additional decision; default OFF
+- **Resolved in spec**:
+  - ✅ First lens = graph (most groundwork via existing L3 sync)
+  - ✅ Signal schema shape locked (9 fields per blueprint § 2)
+  - ✅ Event bus implementation = asyncio queues + topic routing (no new infra dep)
+  - ✅ Regime taxonomy = blueprint § 5.1 5-regime set (trend / chaotic / low_liquidity / adversarial / exploit_risk)
+  - ✅ Initial static weights = blueprint § 5.2 table
+- **To resolve at sub-phase boundaries**: per-table list in D-020's "pre-staged decisions" section (8 derivative decisions across 3.1-3.4)
+- **Next gate**: Agent produces mandatory pre-work summary per spec; user reviews + approves before sub-phase 3.1 begins.
+
+### EXP-002: Phase 2 cross-chain — **HALTED 2026-05-24, LOOP CLOSED 2026-05-25**
+
+- **Status**: HALTED (detector REMOVED via `railway down --yes` 2026-05-24) after recurring +500M / +400M CU spike — root cause identified as newHeads subscription leak, fixed via D-017. End-of-experiment LOOP executed 2026-05-25 (`memory/trades/2026-05-25_exp-002-summary.md`).
+- **Final findings**:
+  - H1 INVALIDATED (unchanged from D-007); intra-chain emissions dominated by 1 persistent + 2 transient arbs
+  - H1' WEAKENED — not falsified; 12 unique cross-chain keys in one ~1h burst on 2026-05-17, zero replications in ~13h subsequent detection
+  - H2 **SUPPORTED-WITH-CAVEAT (D-019)** — first H2-positive result across Phase 1 + Phase 2; 84.5% cross-chain hard-flag rate concentrated on rule_2 + one Arbitrum WETH/USDC Slipstream pool
+  - H3 newly testable (1,047 flagged + 25,075 unflagged records available)
+  - H4 UNDETERMINED — only 2 directional buckets observed
+  - UNK-002 REVERSED via D-018 — MSUSD/USDC arb DID reopen, bursty cadence (open 6-8h, closed 4-5 days)
+- **Outstanding work (closes in parallel with Phase 3 sub-phases)**:
+  - UNK-010 / UNK-011 / UNK-012 resolution (L3 cadence investigation; rule_2 true-positive attestation; cross-chain rare-burst characterization)
+  - H3 distributional comparison (now runnable; bumps to high-priority once Phase 3 sub-phase 3.1 is in motion)
+
+### EXP-002 detail (kept for context — superseded by EXP-003 as active experiment)
+
+- **Original status**: **RUNNING** — deployed per D-014; deadline 2026-05-24 ~17:20 UTC.
 - **Monitored set**: 159 pools (Base 123, Arb 34, OP 2). OP is UniV3-only — Velodrome factory addresses still unverified, deferred. Per-chain pool counts within ±20% spec estimates except OP (estimated ~95, actual 2 → cross-chain coverage on the WETH-USDC pair only, still sufficient for H1' on the canonical token).
 - **Cross-chain scan routes**: 12 across the Base↔Arb↔OP triangle.
 - **First-30-min health**: Base lag 0.4-0.8s, Arb (sampled 1/8) lag 0.5-1.2s, OP lag 0.2-0.3s. Sync cycle 19-20s, 0 errors. All within spec.

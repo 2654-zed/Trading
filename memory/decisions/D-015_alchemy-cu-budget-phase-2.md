@@ -2,7 +2,7 @@
 
 **Date**: 2026-05-17
 **Made by**: agent (per `PHASE_2_CROSS_CHAIN_SPEC.md` sub-phase 2.2 acceptance + D-014 in-flight resolution path)
-**Status**: ACTIVE
+**Status**: **REVERSAL TRIGGERED 2026-05-24 → ROOT CAUSE IDENTIFIED 2026-05-25**. Spike was caused by a newHeads subscription leak in `_AlchemyTransport.subscribe_new_heads()` — each PoolMonitor subscription-level retry opened a new subscription_id without unsubscribing the previous one; Alchemy delivered messages to all leaked subscriptions on the shared WS, peaking at ~170 active subs on Base (vs intended 1). NOT a fundamental misjudgment of the projected CU rate — the projection was correct for the intended state, but the actual state diverged due to a resource leak. Fix landed 2026-05-25 (commits `9ca2565` + `a810799`); architectural pattern documented in `D-017_ws-subscription-lifecycle.md`. Detector still HALTED pending the next deploy with the fix; this decision flips back to **ACTIVE** once post-deploy verification confirms newHeads CU rate drops to ~2.6M/day per chain.
 
 ## Context
 
@@ -119,7 +119,7 @@ This decision is REVERSED and EXP-002 paused for re-spec if any of:
 
 ## Links
 
-- Spec sub-phase: `../../PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.2 acceptance
+- Spec sub-phase: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.2 acceptance
 - Phase 2 umbrella: `D-009_phase-2-cross-chain-spec-approved.md`
 - Go-live decision: `D-014_phase-2-go-live.md`
 - UNK-003 entry: `../unknowns/UNKNOWNS.md`

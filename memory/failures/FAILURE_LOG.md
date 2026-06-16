@@ -6,6 +6,34 @@ to the same entry rather than deleting.
 
 ---
 
+## 2026-05-24
+
+### Failure: Alchemy CU consumption spiked +500M (May 22-23) then +400M (May 23-24) — D-015 reversal triggered, detector halted
+
+* **Expected behavior**: per D-015 (UNK-003 resolution), our trading-exp consumes ~3.4M CU/day on the steady-state ~1.5 req/s multicall pattern (~101M/month projected against 300M free tier; user is on a 2.5B/mo paid tier). User's total Alchemy account (shared with `stellar-embrace`) was tracking at ~30M CU/day for most of May.
+* **Actual behavior**: Two consecutive day-over-day CU spikes:
+  - **May 22 → May 23**: ~1.1B → ~1.6B = **+500M CU in 24h**
+  - **May 23 → May 24**: continued spike pattern, **+400M CU additional** after user attempted a fix
+  - Total spike envelope: ~900M CU added over 2 days vs ~60M expected
+* **Cause (CONFIRMED 2026-05-25 by user RCA)**: **newHeads subscription leak in `_AlchemyTransport.subscribe_new_heads()`** — our detector, not stellar-embrace. Mechanism:
+  1. `pool_monitor.py:480-509` "subscription-level retry" branch catches a stall error and re-calls `transport.subscribe_new_heads()` on the SAME `ws_w3` instance (the underlying WebSocket is owned by ChainMonitor's `async with self._transport_factory(...)` block, not re-opened by PoolMonitor's reconnect).
+  2. Each `await self._w3.eth.subscribe("newHeads")` call opens a NEW subscription_id at the Alchemy side. The OLD subscription_id was never `eth.unsubscribe`'d — so Alchemy keeps delivering newHeads messages to ALL still-registered subscriptions on the same WS, even though our app only iterates one of them.
+  3. With `max_consecutive_stalls=3`, up to 3 subscriptions can leak per WS reset cycle. Subsequent stalls compound the leak. Subscriptions only get reaped when the underlying TCP connection closes (which our 2.8.3 ChainMonitor recycle does — but only after the leaked subscriptions have been collecting messages).
+  4. Per-subscription CU cost: 86,400 newHeads/day on Base × ~30 CU per delivery = ~2.6M CU per active subscription per day. **445M CU/day on Base ÷ 2.6M ≈ 170 active subscriptions at the peak** vs intended 1.
+  5. **Why Base specifically**: trips the stall path more often than Arb/OP (larger monitored pool set after May 17 made Multicall3 calls slower → more chance of stall overlap → faster leak accumulation).
+* **Why my prior hypothesis ranking was wrong (epistemic lesson)**: When I filed the initial 2026-05-24 entry I ranked 3 candidates by prior probability. **None of them were the actual cause.** Specifically:
+  - I ranked "stellar-embrace post-outage catch-up" as MOST likely (it wasn't — and the recurrence after user's fix attempt should have weakened this faster than I noted).
+  - I ranked "new RPC method in 2.8.4" as LOW probability. The actual cause was NOT a new RPC METHOD but a CUMULATIVE bug in an existing one — the structural pattern was different from what I was screening for.
+  - I never considered "stateful WS resource leak across reconnect retries" as a candidate. **This is now in my hypothesis-set library.** Future "CU spike on long-running service" suspicions should ALWAYS include resource-leak-via-reconnect-without-cleanup as a candidate.
+* **Impact**: Account peaked at ~1.99B / 2.5B = ~80% utilization before halt. Detector burned ~900M CU over 2 days. No data loss (all JSONL preserved on volume). Research output across the full EXP-002 window remains: 1 MSUSD/USDC persistent arb (Run 1 + May 23 reopen) + 12 unique cross-chain keys on May 17 + 2 transient WETH arbs on May 24.
+* **Fix (landed 2026-05-25, commits 9ca2565 + a810799)**:
+  - `9ca2565` — RPC telemetry instrumentation (per-method CU visibility for trading-exp, mirroring surveillance side)
+  - `a810799` — **The actual fix**: `_AlchemyTransport` now tracks `_active_sub_id`. Before each `eth.subscribe("newHeads")`, it calls `eth.unsubscribe(self._active_sub_id)` if a prior subscription exists. A `try/finally` around the message iterator ensures cleanup on any exit path (CancelledError, escalation, generator close). All unsubscribe calls are best-effort because the WS may already be dead — failures are logged-and-swallowed.
+  - Architectural lesson captured in `decisions/D-017_ws-subscription-lifecycle.md`.
+* **STATUS**: ROOT CAUSE IDENTIFIED + CODE FIX LANDED 2026-05-25. Detector still HALTED pending the next deploy with the fix. Reopens as RESOLVED after one cycle of post-deploy verification confirms newHeads CU rate drops back to ~2.6M/day per chain (vs the peak ~445M/day on Base).
+
+---
+
 ## 2026-05-22
 
 ### Failure: 2.8.3 RCA fix had a gap — only WSStallError escalated, ConnectionClosedError silently retried forever

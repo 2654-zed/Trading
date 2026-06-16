@@ -58,3 +58,20 @@ Thumbs.db
 
 # Test outputs.
 .benchmarks/
+
+# bloXroute credentials + ALL captured data (never commit).
+# Rule (docs/DATA.md): data BYTES do not go in git — too large, and
+# engine/data/bloxroute_config.json holds the bloXroute auth header.
+# Exclude the whole data tree, not just one subdir, so l2/, confirmations/,
+# and _demo_join/ can't slip in either.
+engine/data/
+
+# Handoff exports — derived data bytes (~100 MB+); descriptions live in docs.
+handoff/*.csv
+handoff/*.parquet
+handoff/*.zip
+# (handoff/*.md docs + the manifest stay tracked.)
+
+# Live L2 recordings (GBs/day) wherever the collector writes them.
+l2_data/
+**/l2_data/

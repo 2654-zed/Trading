@@ -14,7 +14,7 @@ arbitrage path, never an actual transaction.
 
 | Field | Value |
 |---|---|
-| Status | **RUNNING** — EXP-002 launched 2026-05-17 ~17:20 UTC via `railway up` (per D-014) |
+| Status | **HALTED 2026-05-24** — `railway down --yes` executed after Alchemy CU consumption spiked +500M (May 22-23) then +400M (May 23-24) on the shared Alchemy account. D-015's reversal trigger has fired. See `failures/FAILURE_LOG.md` 2026-05-24 entry. EXP-002 originally launched 2026-05-17 ~17:20 UTC via `railway up` (per D-014); ran intermittently through multiple WS-stall + reconnect cascades before this CU-driven halt. Root cause of the spike not yet attributed (stellar-embrace post-outage catch-up vs our detector vs stacked containers). |
 | Host | Railway, project `blockchain` (ID `d05222fb-abc2-4698-be1a-151289d1b5e1`) |
 | Service | `layer3-trading-exp` (ID `befe4436-aa4f-44e4-9203-180f883ccea0`) |
 | Sibling service | `stellar-embrace` (Layer 3 production, same project) |
@@ -81,21 +81,22 @@ columns (plain + LOWER() functional indexes — see decisions/D-005).
 
 See `INVARIANTS.md` for non-negotiable rules.
 
-## Current health snapshot (2026-05-17, EXP-002 LIVE)
+## Current health snapshot (2026-05-24, EXP-002 HALTED on CU spike)
 
-- Deployment status: **RUNNING (resumed)**. Railway service `layer3-trading-exp`. EXP-002 first deploy stalled at T+7h via FAILURE_LOG 2026-05-18 (all WS subscriptions silently degraded). Redeployed 2026-05-18 ~23:10 UTC with the **WS-stall detector** patch (PoolMonitor.run wraps newHeads iteration with silence + same-block-repeating detectors that raise `WSStallError` → existing reconnect loop fires). New deadline ~2026-05-25 23:10 UTC.
-- Pre-stall data preserved: `run_artifacts/exp_002_t24h/2026-05-17.jsonl` — 13,967 records (12,729 intra-chain Base + **1,238 cross-chain on Base↔Arbitrum**, 12 unique cross-chain opp keys). First empirical evidence that cross-chain detection produces non-trivial signal.
-- Active experiment: EXP-002 (resumed), 7-day run (`--minutes 10080`).
-- Monitored pool set: **159 pools across 3 chains** (Base 123, Arbitrum 34, Optimism 2). Optimism only has UniV3 pools — Velodrome factory addresses still need verification; deferred to a follow-up sub-phase.
-- Cross-chain detector: **12 scan routes** active across the Base↔Arb↔OP triangle.
-- Across fee table: loaded from `/app/data/run_metadata/across_fee_table.json` (verified 2026-05-17; USDC ~1.39 bps live vs 10 bps D-006 baseline — auto-updated, no aborts).
-- Per-chain lag at sample (~30 min post-deploy):
-  - Base: ~0.4-0.8s (well under 2s spec)
-  - Arbitrum (sampled 1/8): ~0.5-1.2s (well under 5s spec)
-  - Optimism: ~0.2-0.3s (well under 2s spec)
-- Sync cycle: ~19-20s for ~80K rows, 0 errors.
-- Live opp count (first ~30 min): Base intra-chain `+1 intra +0 cross` per block — the persistent MSUSD/USDC arb pattern appears to have **reopened** (D-008 UNK-002 resolution reversal technically fired; formal reversal at run-end LOOP). Cross-chain opp count so far: 0 (consistent with the cross-chain shape requiring inter-chain price drift > 50 bps net, which is rare for stable pairs).
-- **--minutes 10080 timer-watchdog ARMED**: deadline ~2026-05-24 17:20 UTC. Live regression confirmed 2026-05-16 (FAILURE_LOG entry RESOLVED).
+- Deployment status: **HALTED — REMOVED via `railway down --yes` on 2026-05-24**. Root cause identified 2026-05-25 (newHeads subscription leak in `_AlchemyTransport`; fix landed in commits `9ca2565` + `a810799`; architectural pattern in `D-017_ws-subscription-lifecycle.md`). Detector remains HALTED pending the next deploy with the fix — operator gate. See `failures/FAILURE_LOG.md` 2026-05-24 entry for the full RCA + lessons-learned write-up.
+- Account utilization at halt: **1.59B / 2.5B CU = ~64% with 7 days left in May**. Forecast at halt time was ~2.4B if another spike fired.
+- Data preserved (volume persists across redeploys):
+  - `run_artifacts/exp_002_t24h/2026-05-17.jsonl`: 13,967 records (Run 1 first 7h — **1,238 cross-chain on Base↔Arbitrum, 12 unique cross-chain opp keys**)
+  - `run_artifacts/exp_002_t21h/2026-05-23.jsonl`: 12,153 records of the reopened MSUSD/USDC arb (~7.9h continuous open window before close at 14:56 UTC May 23)
+  - `run_artifacts/exp_002_d2/2026-05-24.jsonl`: 2 records of transient WETH-mid-WETH intra-chain arbs (146 + 93 bps margins) on Base block 46,419,096
+  - Plus all rollup CSVs through 2026-05-23
+- Monitored pool set at halt: 159 pools across 3 chains (Base 123, Arbitrum 34, Optimism 2 UniV3-only). Across fee table verified and frozen on volume.
+- **Required before any redeploy**: spike attribution via Alchemy dashboard per-app filter (split layer3-trading-exp vs stellar-embrace). If our detector is implicated, code review the 2.8.4 changes for non-multicall RPC patterns. If stellar-embrace is the source (out of scope per I-3), user decides whether to address there.
+- **Hypothesis status at halt**:
+  - H1 (intra ≥1000/day): INVALIDATED long since (D-007); recent data shows ~3 unique intra-chain opps/day → unchanged
+  - H1' (cross ≥50/day): WEAKENED; Run 1's 12 cross-chain in 7h is the ONLY cross-chain signal across all of EXP-002. ~7 days of additional wall-clock since produced zero. Approaching the <10/day falsification floor.
+  - H2 (L3 flags ≥1%): testable but unflagged-only data so far
+  - H4 (Pareto): n too low to evaluate
 
 ## Tests
 

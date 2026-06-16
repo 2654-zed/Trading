@@ -137,7 +137,7 @@ without unwinding the whole deployment.
 
 ## Links
 
-- Spec sub-phase: `../../PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.8
+- Spec sub-phase: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.8
 - Phase 2 umbrella: `D-009_phase-2-cross-chain-spec-approved.md`
 - H1 invalidation that drove Phase 2: `D-007_h1-invalidated-at-current-floors.md`
 - Cross-chain detector: `../../layer3_trading_exp/cross_chain_detector.py`

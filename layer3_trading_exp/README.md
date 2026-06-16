@@ -1,7 +1,7 @@
 # Layer 3 Trading Research Experiment — Phase 1
 
 Detection-and-logging arbitrage research on Base, consuming Layer 3's behavioral
-intelligence corpus. Specification: [`../LAYER3_TRADING_EXPERIMENT.md`](../LAYER3_TRADING_EXPERIMENT.md).
+intelligence corpus. Specification: [`../docs/archive/LAYER3_TRADING_EXPERIMENT.md`](../docs/archive/LAYER3_TRADING_EXPERIMENT.md).
 
 **Phase 1 scope:** no on-chain execution, no capital, no private keys, no LLM in
 runtime pipeline, no adaptive rules. Detection and logging only. See spec §Invariants.
@@ -9,7 +9,7 @@ runtime pipeline, no adaptive rules. Detection and logging only. See spec §Inva
 ## Phase status
 
 - **1.0 — Infrastructure and intelligence consumption:** in progress (awaiting sub-phase acceptance review)
-- **1.1 — Pool monitoring on Base:** **complete** — 78 pools enumerated, frozen at block 45,658,483. See [`../PHASE_1_1_ADDENDUM.md`](../PHASE_1_1_ADDENDUM.md) for the architecture pivot from event-scan + CoinGecko to DefiLlama + `getPool`.
+- **1.1 — Pool monitoring on Base:** **complete** — 78 pools enumerated, frozen at block 45,658,483. See [`../docs/archive/PHASE_1_1_ADDENDUM.md`](../docs/archive/PHASE_1_1_ADDENDUM.md) for the architecture pivot from event-scan + CoinGecko to DefiLlama + `getPool`.
 - **1.2 — Opportunity detection:** not started
 - **1.3 — Layer 3 filter pipeline:** not started
 - **1.4 — Logging and measurement:** not started
@@ -45,7 +45,7 @@ time). The new path queries DefiLlama for pools above the TVL floor, derives
 on-chain addresses via `factory.getPool(...)`, and enriches with on-chain token
 metadata. Wall time dropped from ~100h (worst case) to **~42 seconds**.
 
-Full rationale, trade-offs, and contingency plan: [`../PHASE_1_1_ADDENDUM.md`](../PHASE_1_1_ADDENDUM.md).
+Full rationale, trade-offs, and contingency plan: [`../docs/archive/PHASE_1_1_ADDENDUM.md`](../docs/archive/PHASE_1_1_ADDENDUM.md).
 
 ## Acceptance run result (2026-05-06)
 
