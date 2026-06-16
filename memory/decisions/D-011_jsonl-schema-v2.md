@@ -113,7 +113,7 @@ Mechanism:
 
 ## Links
 
-- Spec sub-phase: `../../PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.5
+- Spec sub-phase: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.5
 - Replay artifact verified: `../../run_artifacts/exp_001/2026-05-13.jsonl`
 - Schema module: `../../layer3_trading_exp/schema.py`
 - Linked UNK: `../unknowns/UNKNOWNS.md` UNK-008

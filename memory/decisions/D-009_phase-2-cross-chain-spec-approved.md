@@ -128,7 +128,7 @@ make this safe.
 
 ## Links
 
-- The approved spec: `../../PHASE_2_CROSS_CHAIN_SPEC.md`
+- The approved spec: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md`
 - Driving hypothesis decision: `D-007_h1-invalidated-at-current-floors.md`
 - Bridge model premise: `D-006_bridge-model-across.md`
 - Open failure that gates 2.8: `../failures/FAILURE_LOG.md` 2026-05-16

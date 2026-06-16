@@ -72,5 +72,5 @@ each candidate's on-chain pool address via the appropriate factory's
 
 ## Links
 
-- Documented in `Desktop/Trading/PHASE_1_1_ADDENDUM.md`
+- Documented in `Desktop/Trading/docs/archive/PHASE_1_1_ADDENDUM.md`
 - Resolved (then-extant) UNK on enumeration approach

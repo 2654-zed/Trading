@@ -212,15 +212,115 @@ Format: YYYY-MM-DD HH:MM | trigger | review file | new failures | new unknowns |
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-05-13 06:30 | Memory system initialization | trades/2026-05-13_pre-index-fix.md | 0 (backfilled 6) | 0 (backfilled 9) | 0 (5 seeded) | ACTIVE | WEAKENED (100% degraded — structurally untestable until UNK-005 resolves) | ACTIVE | Wait for EXP-001 1-day run; then full loop |
 | 2026-05-16 14:30 | EXP-001 terminated (`railway down`) + Phase 1.5 analysis run | trades/2026-05-13_exp-001-final.md | +1 (timer-didn't-terminate, OPEN) | UNK-002 RESOLVED (D-008), UNK-006 RESOLVED (D-008) | +2 (D-007 H1 invalidated, D-008 UNK-002/006 resolution) | **INVALIDATED** (D-007, at current floors) | WEAKENED (unchanged — still depends on UNK-005) | WEAKENED (no flagged group existed in EXP-001 sample) | Draft Phase 2 cross-chain spec (D-006 Across model unblocks; resolve UNK-003 + UNK-008 + UNK-005 inside the spec) |
+| 2026-05-25 | EXP-002 halted (FAILURE_LOG 2026-05-24 CU spike) + 7-step LOOP against preserved data | trades/2026-05-25_exp-002-summary.md | 0 new (status updates only) | UNK-002 REVERTED-to-OPEN (D-018), +3 new (UNK-010 stale L3 tables, UNK-011 single-pool flag verification, UNK-012 cross-chain burst structure) | +2 (D-018 UNK-002 reversal, D-019 H2 supported-with-caveat) | **INVALIDATED** (unchanged, D-007) | **SUPPORTED-WITH-CAVEAT** (D-019; 4.01% overall / 84.5% cross-chain hard-flag rate — first time H2 met across both phases) | NEW DATA AVAILABLE — 1,047 flagged vs 25,075 unflagged records now enable Mann-Whitney/χ² tests; H4 UNDETERMINED (n=2 buckets too thin); H1' WEAKENED (12 unique cross-chain in 1h window, then 0 across remaining ~13h detection) | Push to GitHub → Railway auto-deploy with D-017 fix → run 7d continuous → answer H1' SUPPORTED vs FALSIFIED at next LOOP |
 
 ---
 
 ## NEXT FOCUS (current)
 
-**Set 2026-05-18 ~23:15 UTC (post-redeploy)**: Monitor EXP-002 (resumed
-with WS-stall detector patch from FAILURE_LOG 2026-05-18). New deadline
-~2026-05-25 23:10 UTC. At run-end OR earlier if a hypothesis is
-invalidated mid-run, execute the full LOOP per `loop/LOOP.md`.
+**Set 2026-05-25 (Phase 3 spec approved, EXP-003 active)**: Phase 2's
+LOOP closed (`trades/2026-05-25_exp-002-summary.md`). User approved the
+Phase 3 multi-lens engine spec (`PHASE_3_MULTI_LENS_ENGINE_SPEC.md`)
+per **D-020**. Engine ships as separate `engine/` package at repo root.
+bloxroute migration deferred to Phase 4 (after engine is coded).
+
+**Current focus**: Produce the **mandatory pre-work summary** per the
+Phase 3 spec § MANDATORY PRE-WORK (10 files to read; one-paragraph
+output covering data-path changes, module reuse mapping, new
+abstractions introduced). User reviews before sub-phase 3.1 begins. No
+engine code until the summary is approved.
+
+**Next gate after pre-work**: agent starts sub-phase 3.1 (Signal schema
++ event bus + first lens = graph). Each sub-phase has a "stop here"
+boundary with explicit acceptance criteria.
+
+**Parallel work that doesn't block Phase 3**:
+- H3 distributional test against the 1,047 flagged + 25,075 unflagged
+  records from EXP-002 — the H3 analysis pipeline is ready and the
+  data exists locally; doesn't need a running detector
+- UNK-010 / UNK-011 / UNK-012 resolution (L3 cadence investigation;
+  rule_2 true-positive attestation; cross-chain burst characterization)
+- H1' falsification on a future long-running observation window —
+  blocked until Phase 3 sub-phase 3.4 produces signals at observation
+  cadence OR an earlier Phase-2-style run is scheduled (no current
+  plan to do the latter)
+
+> Earlier focus (2026-05-25 post-RCA-fix): Push to GitHub → run 7 days
+> continuous to validate D-017 + check H1' / H3. SUPERSEDED 2026-05-25
+> by D-020 — instead of continuing Phase 2 measurement, we pivot to
+> Phase 3 engine build. Phase 2 outstanding items roll into the parallel
+> work list above.
+
+---
+
+> Below: pre-D-020 retained focus context for history. (Phase 3 superseded.)
+
+**Set 2026-05-25 (post-EXP-002-LOOP, pre-Phase-3)**: Push to GitHub → Railway
+auto-deploys with the D-017 subscription-lifecycle fix. Run 7 days
+continuous, then execute the next LOOP. Three load-bearing outcomes
+this run answers:
+
+1. **D-017 fix validation** (D-015 budget): post-deploy, Base newHeads
+   CU rate ≤ ~3M/day per chain (vs peak ~445M/day during the leak).
+   Sample window: first 30 minutes. Pass → D-015 flips back to ACTIVE +
+   FAILURE_LOG 2026-05-24 closes RESOLVED.
+2. **H1' SUPPORTED vs FALSIFIED**: cross-chain emissions across a clean
+   7-day window. ≥1 new burst → H1' remains testable; could be SUPPORTED
+   if the burst rate extrapolates ≥10/day (above falsification floor).
+   Zero new bursts → H1' falsifies at <10/day with 7d wall-clock.
+3. **H3 distributional test** runs against the 1,047-flagged + 25,075-
+   unflagged sample from EXP-002 — answers whether L3's rule_2 flag
+   identifies structurally-different opportunities (margin, protocol,
+   token distributions) or just a single-pool overlap with no structural
+   significance.
+
+**Pre-deploy gate** (D-017 reversal criteria): the GitHub push to main
+triggers Railway auto-deploy. Within 30 min, confirm via Alchemy
+dashboard "WebSocket usage by Network" panel that Base newHeads CU is
+≤ ~3M/day. If observed > 10M/day → halt + investigate; D-017 didn't
+land properly.
+
+**Bound on the next run**: 7 days. If H1' falsifies at run-end, Phase 2
+closes out and we make the Phase 3 go/no-go decision. If H1' remains
+testable + H3 shows structural difference, Phase 2 extends with
+sharper measurement focus.
+
+**Loop-history-able events triggering an earlier LOOP**:
+- I-11 T-A (lag>30s anywhere)
+- I-11 T-B (any hypothesis flips status)
+- I-11 T-C (repeat failure of same class)
+- I-11 T-D (UNK blocking execution)
+- D-017 reversal trigger fires (Base newHeads CU > 10M/day)
+
+> Earlier focus (2026-05-25 post-RCA, awaiting redeploy): Fix root cause
+> of newHeads subscription leak. Done — fix in commits `9ca2565` +
+> `a810799`, D-017 documents the pattern. This next focus is the
+> post-fix observation cycle.
+
+**Redeploy is now operator-gated** (only remaining precondition):
+- Push to GitHub triggers Railway auto-deploy (per the May 22 wiring)
+- Within ~30 min of healthy operation, check Alchemy "WebSocket usage by
+  Network" panel: Base newHeads CU rate should be ≤ ~3M CU/day (vs
+  peak ~445M/day during the leak). If observed > 10M/day per chain →
+  D-017 reversal trigger fires; halt + investigate.
+- After one clean cycle (24h), `D-015` flips back from REVERSAL TRIGGERED
+  to ACTIVE.
+
+**Work that's available without redeploying** (and useful regardless):
+execute the LOOP against the preserved JSONL data — Run 1's 7h
+cross-chain burst (12 unique keys) + May 23 MSUSD/USDC arb (~7.9h
+open window, 12,153 records, 1 unique key) + May 24 transient WETH
+arbs (2 records, 146/93 bps margins). The data + analysis pipeline are
+the deliverable; further CU burn is optional at this point. Possible
+output: `trades/2026-05-XX_exp-002-summary.md` with H1' / H2 / H4
+verdicts + the formal D-008 UNK-002 reversal write-up.
+
+> Earlier focus (2026-05-18 ~23:15 UTC post-redeploy): Monitor EXP-002
+> resumed with WS-stall detector. Multiple subsequent failure modes hit
+> (silent stalls, ConnectionClosedError loops, Railway CLI upload
+> dysfunction). Resolved via 2.8.4 unified-escalation + GitHub auto-deploy.
+> Then CU spike forced this halt. Sequence captured in FAILURE_LOG
+> 2026-05-18 / -20 / -21 / -22 / -24 entries + D-016 (two-level reconnect).
 
 > Earlier focus (2026-05-17 ~17:25 UTC): monitor EXP-002 + sample CU at
 > T+30min. Completed — UNK-003 resolved via D-015 (~34% utilization).

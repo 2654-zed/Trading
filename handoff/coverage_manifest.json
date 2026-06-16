@@ -1,0 +1,87 @@
+{
+  "generated_utc": "2026-06-12T17:23:52Z",
+  "mempool_rows": 1835148,
+  "confirmation_rows": 2428351,
+  "confirmation_unique_hashes": 2427561,
+  "mempool_span_utc": [
+    "2026-06-09T02:14:59Z",
+    "2026-06-12T16:58:47Z"
+  ],
+  "confirmation_span_utc": [
+    "2026-06-09T20:29:40Z",
+    "2026-06-12T16:58:40Z"
+  ],
+  "confirmation_gaps": {
+    "n_gaps": 10,
+    "missing_blocks": 12714,
+    "windows": [
+      {
+        "win_start": 1781037014.043979,
+        "win_end": 1781048323.1767368,
+        "missing_blocks": 938
+      },
+      {
+        "win_start": 1781049266.930176,
+        "win_end": 1781087855.830774,
+        "missing_blocks": 3204
+      },
+      {
+        "win_start": 1781090725.845192,
+        "win_end": 1781099756.4850216,
+        "missing_blocks": 747
+      },
+      {
+        "win_start": 1781100758.7324543,
+        "win_end": 1781185857.4399252,
+        "missing_blocks": 7059
+      },
+      {
+        "win_start": 1781186724.851147,
+        "win_end": 1781186795.229011,
+        "missing_blocks": 4
+      },
+      {
+        "win_start": 1781186801.5642512,
+        "win_end": 1781195941.1149693,
+        "missing_blocks": 758
+      },
+      {
+        "win_start": 1781220830.3327446,
+        "win_end": 1781220855.1731203,
+        "missing_blocks": 1
+      },
+      {
+        "win_start": 1781228309.0323427,
+        "win_end": 1781228334.0396786,
+        "missing_blocks": 1
+      },
+      {
+        "win_start": 1781233554.093153,
+        "win_end": 1781233578.950196,
+        "missing_blocks": 1
+      },
+      {
+        "win_start": 1781252120.1511383,
+        "win_end": 1781252138.8225472,
+        "missing_blocks": 1
+      }
+    ]
+  },
+  "block_features_rows": 7871,
+  "tx_outcomes_rows": 1476089,
+  "tx_outcome_breakdown": {
+    "landed": 1314100,
+    "true_ghost": 104438,
+    "replaced_drop": 57551
+  },
+  "clock_synced_distribution": {
+    "None": 378886,
+    "True": 1906619
+  },
+  "honesty_caveats": [
+    "SINGLE VANTAGE: one bloXroute public-mempool feed; only ~41-52% of mined txs were ever seen pending. The rest is private orderflow we cannot observe \u2014 private_inclusion_share is its measurable shadow.",
+    "INTERMITTENT CAPTURE: windows are non-contiguous bursts, not a continuous sample. confirmation_gaps lists the holes; gap-overlapping txs are EXCLUDED from tx_outcomes, not mislabeled.",
+    "true_ghost is an UPPER BOUND (never-landed candidate); it also absorbs private replacements we never saw. Not proof of censorship.",
+    "Treat any effect as an upper bound on the public-mempool slice, NOT a property of all ETH orderflow."
+  ]
+}

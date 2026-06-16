@@ -88,7 +88,7 @@ The following analysis constants are locked:
 
 ## Links
 
-- Spec sub-phase: `../../PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.7
+- Spec sub-phase: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.7
 - H1' module: `../../layer3_trading_exp/analysis/h1_prime.py`
 - H4 module: `../../layer3_trading_exp/analysis/h4_pareto.py`
 - Report extension: `../../layer3_trading_exp/analysis/generate_report.py`

@@ -47,17 +47,21 @@ is not allowed. Every resolution must be an explicit decision.
 
 ---
 
-## UNK-002: Will the MSUSD/USDC arb reopen?
+## UNK-002: MSUSD/USDC arb cadence — what triggers reopens?  [REVERTED-TO-OPEN]
 
-* **Description**: The persistent MSUSD/USDC arb (Aerodrome Slipstream CL50 ↔ Aerodrome stable) was emitting every block for 2 hours, then closed during the slow-processing outage. Will it reopen during the 1-day window? At what cadence?
-* **Why it matters**: This is the dominant signal in our prior data. If it stays closed, H1 statistics from this 1-day run reflect a different opportunity regime than the first 2 hours did.
-* **Impact**: We can't claim a steady-state arbitrage rate without observing the open/close cadence.
-* **Status**: RESOLVED — 2026-05-16
-* **Owner**: 1-day analysis (Phase 1.5 report)
-* **Resolution Path**: When EXP-001 completes, group JSONL records by hour, count distinct opp keys per hour. If MSUSD/USDC reappears, note duration of each "open" window. Resolves with either D-NNN "MSUSD/USDC reopened — H1 supported via persistence pattern" OR D-NNN "MSUSD/USDC stayed closed — first 2h was anomalous".
-* **Linked Decision**: **D-008** (`decisions/D-008_resolve-unk-002-and-006.md`)
-* **Deadline / Trigger**: EXP-001 completes (--minutes 1440 timer expires, ~2026-05-14 05:30 UTC)
-* **Resolution**: **The arb did NOT reopen in ~2.5 days of post-closure observation (~104K blocks).** The detector ran cleanly through this window with zero JSONL records. Strong negative result. The first 1.85 hours of observation captured an inefficiency that subsequently closed and stayed closed. Per D-008: this is consistent with the arb being structurally rare (rebalancing event) rather than persistently-available, OR with a market participant having taken the spread and rebalanced the pool.
+* **Description**: D-008 (2026-05-16) closed this UNK with "the arb did NOT reopen in ~2.5 days of post-closure observation." EXP-002 produced TWO subsequent reopenings of the same pool pair (2026-05-17 ~6.3h open; 2026-05-23 7.9h open) — see D-018 for the full evidence + open-window distribution. D-008's resolution criterion #1 explicitly fired. UNK is REVERTED to OPEN with a sharpened question: **what is the open-window cadence and what triggers reopens?**
+* **Why it matters**: The arb is bursty: open for 6-8h at a time, closed for 4-5+ days between bursts. This is RESEARCH-RELEVANT — Phase 2 runs that happen to land entirely within closed phases will see zero MSUSD/USDC emissions and undercount intra-chain opportunity rate. Runs that catch open phases will see ~12K emissions of 1 unique key. We can't compute a steady-state rate without characterizing the open/close cycle.
+* **Impact**: H1 measurement remains INVALIDATED (D-007) regardless — even continuously-open MSUSD/USDC is 1 unique key, far from 1000/day. But the bursty pattern matters for explaining why some run windows show high intra-chain emission counts and others don't.
+* **Status**: REVERTED-TO-OPEN — 2026-05-25 (was RESOLVED 2026-05-16 via D-008; reversal triggered)
+* **Owner**: next multi-week run (post-D-017 redeploy)
+* **Resolution Path**: Run the detector continuously for 30+ days post-D-017 fix. Observe each open/close transition. Characterize the inter-burst gap distribution + open-window duration distribution. Compute conditional reopening probability per day. Resolves with a new D-NNN "MSUSD/USDC cadence characterized — bursty pattern at λ=... per week".
+* **Linked Decision**: **D-018** (`decisions/D-018_uk-002-reversal.md`) — REVERSES D-008's resolution. D-018 itself is the most recent linked decision; further resolution will produce D-NNN.
+* **Deadline / Trigger**: Trigger — next Phase 2 long-run completes (≥30 days post-D-017). Until then, UNK is informational, not blocking.
+* **Observed open windows** (cumulative across EXP-001 + EXP-002):
+  - EXP-001: ~1.85h open (2026-05-13 04:28-06:19 UTC), then closed
+  - EXP-002 Run 1: ~6.3h open (2026-05-17 16:40-22:59 UTC), then closed (probably; WS stalled during the close, so close-time is imprecise)
+  - EXP-002 Run 4: **7.9h** open (2026-05-23 07:05-14:56 UTC), then closed (close time precise — JSONL writes stopped cleanly)
+- **Inter-burst gaps observed**: 4.4 days (EXP-001 → Run 1), 5.4 days (Run 1 → Run 4). Initial cadence estimate: open ~6-8h every ~5 days.
 
 ---
 
@@ -154,3 +158,134 @@ is not allowed. Every resolution must be an explicit decision.
 * **Resolution Path**: At end of 1-day run, spot-check 3-5 monitored pool pairs by computing margin from raw pool state independently vs the detector's logged output for the same block. If they agree on the same blocks the detector reported zero opps → detector OK. Optionally: add a synthetic test pair with mocked divergent prices to a tests/ verification harness.
 * **Linked Decision**: none yet — required before RESOLVED. Linked decision will be a D-NNN_detector-correctness-attested either affirming the detector is correct (with the spot-check methodology recorded) or describing a fix.
 * **Deadline / Trigger**: HARD DEADLINE — before EXP-001 analysis is published. If we can't attest detection correctness, H1 numbers can't be claimed.
+
+---
+
+## UNK-010: L3 `bytecode_families` + `trust_amplification` 100% stale across EXP-002 window
+
+* **Description**: Across all 26,122 EXP-002 records (per D-012 per-table thresholds), `bytecode_families` (6h threshold) and `trust_amplification` (36h threshold) report stale 100% of the time. The other 3 filter-critical tables (`contracts`, `deployers`, `trap_events`) report stale <0.1% of the time — they're fresh.
+* **Why it matters**: Filter rules 4 (`asymmetric_transfer`) + 8 (`org_001_proximity`) depend on `bytecode_families` and `trust_amplification` respectively. With these tables always stale, those rules always report degraded, contributing nothing to H2's flag rate. H2 SUPPORTED-WITH-CAVEAT (D-019) is driven entirely by rule_2 + rule_3 on the 3 fresh tables.
+* **Impact**: 2 of 13 filter rules effectively offline. H2's coverage is partial — we don't know what rule 4/8 would flag if their inputs were fresh.
+* **Status**: OPEN — surfaced 2026-05-25 via EXP-002 LOOP analysis
+* **Owner**: agent surfaces; user decides whether to investigate L3-side
+* **Resolution Path**: Per I-3 (read-only on L3) we can't fix L3's update cadence ourselves. Options: (a) query L3 directly to confirm whether the tables are genuinely behind their natural cadence or whether L3 has stopped writing to them; (b) widen D-012's thresholds for these two tables (e.g. 72h instead of 36h for trust_amp) — but only if L3 confirms a slower-than-expected cadence is the new normal; (c) accept partial filter coverage and document it as a known limitation.
+* **Linked Decision**: none yet — required before RESOLVED. Will be a D-NNN_l3-table-cadence-investigation referencing whichever option (a/b/c) is taken.
+* **Deadline / Trigger**: Before any H2/H3 numbers are published externally. Sub-week deadline.
+
+---
+
+## UNK-011: rule_2 flagged the canonical Arbitrum WETH/USDC Slipstream pool — true positive or false positive?
+
+* **Description**: 1,047 of 1,238 cross-chain emissions (84.5%) fired rule_2 `org_wallet_membership` (Tier A) on pool `0xc6962004f452be9203591991d15f6b388e09e8d0` — the canonical WETH/USDC Aerodrome Slipstream pool on Arbitrum at fee tier ~5 bps. Is this:
+  - **True positive**: L3 has legitimately detected something risky about this pool's deployer / operator (e.g. an exchange or MEV operator with confirmed bad behavior in L3's corpus)?
+  - **False positive**: L3's `org_wallets` table over-broadly captures major-protocol infrastructure (this pool's deployer might be Aerodrome's official deployer, which got swept up in some L3 classification rule)?
+* **Why it matters**: H2 SUPPORTED-WITH-CAVEAT (D-019) hinges on this being a meaningful signal. If true positive → cross-chain arb research has a real L3-yield finding (these specific pools should be avoided in execution-mode trading). If false positive → the 84.5% flag rate is an artifact of L3's classification noise, and H2's spirit-test fails.
+* **Impact**: Phase 3 (execution-mode) go/no-go decision rests in part on this. Also affects H3's interpretation — comparing flagged vs unflagged distributions only means something if "flagged" is a meaningful category.
+* **Status**: OPEN — surfaced 2026-05-25 via EXP-002 LOOP analysis
+* **Owner**: agent surfaces; user decides whether to query L3 directly
+* **Resolution Path**: Manual query against L3's `org_wallets` table for the address `0xc6962004f452be9203591991d15f6b388e09e8d0` to surface: (a) which org_NNN it's classified under, (b) what evidence drove the classification, (c) whether the classification appears intentional (specific bad behavior documented) or incidental (deployer-of-many-things swept up). Per I-3 this is read-only L3 query.
+* **Linked Decision**: none yet — required before RESOLVED. Will be a D-NNN_l3-flagged-pool-attestation either affirming the L3 classification or documenting a false-positive workaround.
+* **Deadline / Trigger**: Before H3 distributional comparison is published. Same deadline as UNK-010.
+
+---
+
+## UNK-012: Cross-chain emissions clustered entirely in one ~1-hour window — is this rare-burst pattern, time-of-day, or coincidence?
+
+* **Description**: All 1,238 EXP-002 cross-chain emissions (12 unique keys) fired in a single ~1-hour UTC window on 2026-05-17 23:XX. The remaining ~13 hours of effective EXP-002 detection produced zero cross-chain emissions. Possible causes:
+  - **Rare-burst pattern**: cross-chain arbs exist but are very infrequent (similar to MSUSD/USDC's bursty cadence — UNK-002)
+  - **Time-of-day effect**: certain market conditions (lower CEX activity, U.S. evening, Asian morning) favor cross-chain price drift
+  - **Coincidence cluster**: a one-time market event we happened to capture; no repeatable pattern
+* **Why it matters**: H1' (cross-chain ≥50/day) verdict depends critically on this. If rare-burst at λ≈1/week, H1' falsifies on a multi-month window. If time-of-day-clustered, we could schedule observation to catch the daily window. If coincidence, H1' has no testable structure.
+* **Impact**: Determines whether Phase 2 closes out or extends into a Phase 2.X with longer wall-clock.
+* **Status**: OPEN — surfaced 2026-05-25 via EXP-002 LOOP analysis
+* **Owner**: next long-run (post-D-017 redeploy)
+* **Resolution Path**: Run continuously for ≥30 days post-D-017. Bucket cross-chain emissions by UTC hour-of-day. If concentrated, time-of-day hypothesis. If spread uniformly with ~1 burst/week, rare-burst hypothesis at observable rate. If zero further bursts in 30 days, coincidence/H1' falsification.
+* **Linked Decision**: none yet — required before RESOLVED. Will be a D-NNN tied to the next LOOP execution.
+* **Deadline / Trigger**: Trigger — next long-run completes. Deadline = end of next Phase 2 measurement window.
+
+---
+
+## UNK-013: Phase 2 monitored set ↔ L3 corpus have zero address overlap by construction
+
+* **Description**: Sub-phase 3.1's 30-min smoke (60 scans of GraphLens against the real `monitored_pools.json` + L3 SQLite) emitted **0 signals**. Diagnosis: the 129 Phase 2 monitored pools (top-TVL AMM contracts on Base/Arb/Optimism) have **zero** L3 corpus overlap on *any* tested join key:
+  * `contracts.contract_address` — 0/129 pool-address hits
+  * `contracts.deployer_address` — 0/129 pool-deployer hits (pool factories don't appear)
+  * `contracts.contract_address` queried with the 88 unique `token0`/`token1` addresses — 0/88 hits (canonical tokens like WETH/USDC aren't tracked in L3's surveillance corpus)
+  * `org_wallets.address` queried with token addresses — 0/88 hits
+* **Why it matters**: GraphLens v1's three signal types (`cluster_detected`, `centrality_spike`, `subgraph_anomaly`) all assume L3 has classifications for addresses in our monitored set. The unit tests passed against synthetic fixtures that I designed to fit the lens — but real data shows the universes are **disjoint by construction**:
+  * L3 indexes *suspicious infrastructure* (drainers, vanity-bait, asymmetric-transfer tokens, trap-emitting contracts) — the things L3 wants to *warn about*
+  * Phase 2 monitors *top-TVL legitimate liquidity* — the things L3 explicitly excludes from surveillance
+  * Even more structurally: `cluster_detected` ("≥3 pools share a deployer") **cannot fire** for AMM pools at all, because each Uniswap V3 pool is deployed by its factory, not by a shared EOA. The synthetic fixture was structurally unrealistic.
+* **Impact**: The sub-phase 3.1 spec's acceptance criterion *"30-min smoke run produces ≥100 Signals, all validating cleanly"* cannot be met with the current data plumbing. We have to either (a) change what we monitor, (b) change what we ask L3, (c) change the lens entirely, or (d) accept the smoke as an "infrastructure passes; real-signal validation deferred" partial pass.
+* **Status**: OPEN — surfaced 2026-05-27 via sub-phase 3.1 smoke run
+* **Owner**: agent surfaces; user decides direction
+* **Resolution Path** (4 candidate paths; user picks one):
+  1. **Query L3 about counterparties, not pools.** Use L3 tables that record *interactions* (`transaction_events`, `approval_events`, `liquidity_events`, `cluster_events`) to find flagged contracts that have *transacted on* our monitored pools. Different graph-math notion ("who's swapping here?") that may actually match L3's data shape.
+  2. **Broaden the monitored set.** Extend Phase 2 enumeration past top-TVL into the long tail where L3-flagged contracts live. Costly + changes Phase 2 scope.
+  3. **Pivot GraphLens away from L3 enrichment.** Have it compute graph metrics on the *interaction graph* derived from on-chain swap/transfer logs directly (no L3 join). L3 becomes one input among many, not the primary edge labeler.
+  4. **Accept partial pass.** Document the data overlap finding; ship sub-phase 3.1 as "infrastructure works; real-signal validation deferred to sub-phase 3.2 when the next lens lands." Lowest cost, but defers the real test.
+* **Linked Decision**: **D-023** (`decisions/D-023_graph-lens-v1-and-unk-013-resolution.md`) — Path 1 chosen and implemented.
+* **Deadline / Trigger**: Blocks sub-phase 3.1 close-out. Must be resolved before D-021/D-022/D-023 derivative decisions are filed.
+* **Status**: RESOLVED — 2026-05-27
+* **Resolution**: **Path 1 chosen** — re-grounded GraphLens on L3 interaction tables. Diagnostic showed `org_transfer_events.to_address` has 244K hits across 50 of our 217 monitored addresses, and `poisoning_events` has 1 distinct hit. Three signal types re-defined: `cluster_detected` on shared `org_id`, `centrality_spike` on transfer-volume in-degree, `subgraph_anomaly` on poisoning_events + high-risk `from_role` ∈ {laundry, unknown} + legacy org_wallets. Added `prefetch_for_scan` bulk-fetch hook to the Layer3CorpusSource Protocol so the un-indexed `to_address` column doesn't cause 10-min-per-scan latency. **30-min smoke produced 2,940 signals, all validating cleanly, 0 drops, 3 distinct types** — sub-phase 3.1 acceptance bar cleared by 29×.
+
+---
+
+## UNK-014: Engine lenses scan static L3 state — no temporal dynamics until live data or temporal replay
+
+* **Description**: Sub-phase 3.2's lenses (graph, stochastic, information) each scan the *current full state* of the local L3 SQLite copy on every scan, rather than advancing through time. Because the L3 copy is static during a smoke run (sync is paused; engine is $0-CU offline per D-024), every scan emits an identical signal set. The 1-hour 3.2 smoke confirmed this: all 13 aggregate windows had byte-identical weighted scores (0.5013), and every lens's per-window max-strength series had **zero variance**.
+* **Why it matters**: The orchestrator's cross-lens correlation matrix — a spec-required boundary-report artifact and a load-bearing input to sub-phase 3.3's conflict engine + regime engine — is **undefined** on zero-variance series (Pearson correlation is 0/0). We cannot observe whether lenses agree/disagree over time, detect regime transitions, or surface conflicts, because there is no temporal variation in the input. The signal *generation* and *aggregation* machinery is proven correct; the *dynamics* are not yet observable.
+* **Impact**: Sub-phase 3.3 (synthesis + regime engine + conflict engine) cannot be meaningfully validated against static data. Its acceptance criteria — "regime engine classifies each 5-min window with a label + confidence", "conflict engine emits ≥1 ConflictSignal per 1000 Signals", "CompositeSignal per coordinated event" — all require the input to vary over time.
+* **Status**: OPEN — surfaced 2026-05-28 via sub-phase 3.2 smoke
+* **Owner**: agent surfaces; resolution is a sub-phase 3.3 design decision
+* **Resolution Path** (candidate approaches for 3.3):
+  1. **Temporal replay**: instead of "scan current full state," have each lens advance a time cursor through the historical L3 data (e.g. each scan processes the next N-minute slice of `org_transfer_events`/`liquidity_events` by timestamp). This synthesizes a time series from historical data — $0 CU, and gives real temporal variation. Most promising.
+  2. **Live data** (Phase 4): when bloxroute/Alchemy budget returns, lenses read a live stream and dynamics emerge naturally. Deferred per D-020/D-024.
+  3. **Backtest windows**: replay a specific known-interesting historical window (e.g. the May 17 cross-chain burst from UNK-012) as a bounded temporal sequence to validate regime/conflict detection against ground truth.
+* **Linked Decision**: **D-029** (`decisions/D-029_temporal-replay-mechanism.md`) — option 1 (temporal replay) chosen + implemented.
+* **Deadline / Trigger**: Blocks sub-phase 3.3 acceptance. Must be resolved at 3.3 design time, before the regime + conflict engines are built.
+* **Status**: RESOLVED — 2026-05-28
+* **Resolution**: **Option 1 (temporal replay) implemented** via `ReplayClock` + adapter raw-row caching with `as_of_ts` + lens replay mode + lockstep driver + orchestrator event-time windowing. The 200-window replay over the 49.2-day data span produced aggregate scores with **166 distinct values of 200** (zero-variance defect gone), all 9 signal types firing, all 5 regimes appearing, 238 composites + 194 conflicts. The temporal dynamics that regime/conflict detection require are now present. D-029 documents the mechanism + the lockstep correctness fix (concurrent lenses fragmented windows; lockstep made the watermark monotonic).
+
+---
+
+## UNK-015: H5 margin only +7pp — proxy weakness, lens correlation, or genuine?
+
+* **Description**: Sub-phase 3.4b's H5 test (orchestrator beats best single lens) came out DIRECTIONALLY correct but WEAK: orchestrator score↔outcome correlation |0.242| vs best single lens (graph) |0.172| = **+7.0pp**, short of H5's formal **≥15pp** bar. Three candidate explanations, indistinguishable on current evidence.
+* **Why it matters**: H5 is the load-bearing Phase 3 hypothesis — "does multi-lens synthesis beat the best single lens?" If the orchestrator only adds 7pp, the whole multi-lens apparatus may not justify its complexity over a graph-lens-only detector.
+* **Impact**: Determines whether Phase 3's architecture earns its keep, and whether Phase 4 should invest in more lenses or simplify.
+* **Status**: RESOLVED (FINAL) — 2026-05-28 via D-041 then D-042 (entity-specific re-test)
+* **Owner**: sub-phase 3.5 (replay harness) + Phase 4 (real outcomes)
+* **RESOLUTION (D-041 → D-042 final)**: Candidate (c) GENUINE — the multi-lens synthesis adds no edge; it DILUTES the one predictive lens. Confirmed across SIX tests (proxy IS +7pp only; proxy OOS −5.1; real basket IS/OOS −11.7/−8.4; real entity-specific IS/OOS **−16.6/−11.0**). The un-exhausted refinement (entity-specific outcomes) was run and made the gap WIDER: it strengthened the information lens (corr 0.19→0.29) but the orchestrator still lost by −16.6pp because the near-non-predictive graph lens (corr 0.035) dominates signal volume and drags synthesis toward noise. Real predictive signal exists but ONLY in the information lens alone (~0.29). Phase 5 = NO-GO FINAL; productive follow-on is a single information-lens detector, not the orchestrator.
+* **Resolution Path**: Candidate causes: (a) **proxy weakness** — the D-034 forward-flow proxy may not separate orchestrator from best-lens even if real P&L would; test by re-running H5 against Phase 4 realized outcomes. (b) **lens correlation** — graph dominates signal volume (7,632 of 7,938); stochastic+information are sparse, so the orchestrator is mostly graph anyway. Test by measuring inter-lens signal correlation + forcing balanced lens weighting. (c) **genuine** — multi-lens really adds little here; would falsify the architecture's value. The 3.5 replay harness (learned vs initial on held-out window) + Phase 4 real outcomes disambiguate.
+* **Linked Decision**: none yet — will be a D-NNN after Phase 4 real-outcome H5 re-test. (D-039 records the 3.5 OOS evidence but does NOT resolve the unknown.)
+* **Deadline / Trigger**: Before Phase 3 is declared a success/failure externally. Trigger = Phase 4 real outcomes available.
+* **3.5 out-of-sample evidence (2026-05-28, D-039)**: The rigorous train/holdout test made it WORSE, not better. In-sample the orchestrator beat best-lens by +7.0pp; **out-of-sample it was −5.1pp** (orch |corr| 0.016 vs best lens stochastic |corr| 0.067 on 60 holdout windows). All proxy correlations are near-zero (0.016–0.067), and observability shows no lens is a strong escalation predictor. This rules IN candidate (a) proxy-weakness as a likely contributor (the forward-flow proxy may simply be too weak a target) and keeps (c) genuinely-no-edge live; it cannot exonerate the architecture. Only Phase 4 realized-outcome data can distinguish "proxy too weak" from "multi-lens adds nothing." Until then, **the orchestrator's edge over a single lens is UNPROVEN.**
+
+---
+
+## UNK-016: Does H9 (entropy_drop-on-roles → return) survive survivorship + costs + multi-window?
+
+* **Description**: D-043 found `entropy_drop` on a token's transfer-role distribution predicts forward return out-of-sample (signed corr ≈+0.48, n=74 holdout, 24-48h). It is the first OOS-surviving signal in the project. But three threats remain unaddressed: survivorship bias, transaction costs, and single-window over-fit.
+* **Why it matters**: H9 is the only live tradable-edge candidate after the multi-lens NO-GO (D-042). Whether it's real or an artifact determines if there's ANY path to a future execution phase.
+* **Impact**: Decides whether the project has a viable signal at all, and whether a focused single-signal detector is worth building/financing.
+* **Status**: CLOSED — 2026-06-08 via D-047 (input foundation contaminated; H9 thesis withdrawn). [Was: RESOLVED 2026-05-28 via D-044 "validated with caveats"; then live OOS negative 2026-06-02; now CLOSED on root cause.]
+* **CAPSTONE / ROOT CAUSE (D-047, 2026-06-08)**: L3 retired itself and declared its behavioral LABELS unreliable ("observations sound, labels suspect"; org/role mapping collapsed). H9 = `entropy_drop` on the `from_role` distribution — **exactly the contaminated label layer.** So H9 was computing entropy over largely-mislabeled noise. This is the CAUSAL root of the in-sample-good / out-of-sample-bad pattern (a noise-label signal does exactly that). The question is now moot: the input is known-bad, the live OOS read was already negative (−$6,444, 27% win), and the paper trade is wound down. No viable single-signal edge; no proprietary-data edge remains.
+* **Owner**: closed.
+* **GATE 1 (survivorship) — PASSED 2026-05-28** (`engine/data/info_lens_survivorship.log`): 0 of 86 `entropy_drop`/roles signals fired on a token that died mid-window or was unpriceable at signal time. Death-aware corr == survivor-only corr exactly (holdout +0.480 @24h, +0.506 @48h). The directional edge is NOT a survivorship artifact. Nuance: partly because (a) the signal self-selects liquid tokens (needs ≥10 transfer events/window to fire) and (b) the monitored universe is established tokens, not fresh-launch rugs — so H9 is survivorship-robust ON ESTABLISHED TOKENS specifically.
+* **GATE 3 (beta-vs-alpha) — PASSED 2026-05-28** (`engine/data/info_lens_regime.log`): A true second window is impossible (L3 role labels end 2026-05-18 + are L3-proprietary; Alchemy CU can't reconstruct them — sync would have to resume). So tested market-neutrality instead. (a) Market basket mean was only ~+1% (NOT a bull run); the +25.8% @48h was the SIGNAL's tokens vs ~+1.5% market = wide outperformance. (b) corr(strength, EXCESS return) = +0.46 @24h / **+0.49–0.50 @48h** — barely below the raw corr → the edge is ALPHA, not beta. (c) Horizon caveat: up/down-phase split shows 24h INVERTS in down-markets (corr −0.53, n=25) while **48h is regime-robust** (+0.50 up / +0.58 down). → use the 48h horizon; 24h would need market-direction-awareness. Down-phase subsamples small (n=21-25), suggestive not definitive.
+* **REMAINING — GATE 2 (costs)**: the last make-or-break. +0.50 excess corr on tokens averaging ~+24% excess @48h is large, but memecoin enter+exit slippage on thin pools could eat most of it. Apply Phase 2 cost model (D-010 fees + depth-based slippage). CU note: exact pool depth at signal blocks would sharpen slippage (<100K CU, well within the 77M available) but TVL-proxy is a fine first pass.
+* **Resolution Path**:
+  1. **Survivorship**: re-run including dead/delisted tokens (assign ≈−100% or last-traded price to tokens that lost price coverage mid-window). Re-test whether the DIRECTIONAL (signed) edge holds; magnitude edge is more robust. $0 CU (DefiLlama + dead-token list).
+  2. **Costs**: apply the Phase 2 cost model (D-010 static fees + slippage on memecoin-pool depth) to convert the corr into net expectancy per trade. A signal with +0.5 corr but negative after-cost expectancy is not tradable.
+  3. **Multi-window**: replicate on ≥2 other historical windows / different market regimes. The current result is one 49-day period.
+* **Linked Decision**: none yet — will be a D-NNN after the survivorship + cost + multi-window tests either confirm H9 (tradable) or kill it (artifact).
+* **Deadline / Trigger**: Before any single-signal execution consideration. Trigger = focused H9 validation study runs.
+
+* **LIVE FORWARD REPLICATION (ongoing, the true second window) — first read NEGATIVE-LEANING, 2026-06-02:**
+  L3 resumed; surveillance.db delta-synced to 2026-06-02 (~15 days of genuinely forward data past the 2026-05-18 in-sample cutoff). The live paper-trade harness (`engine/scripts/paper_trade_h9.py`, OOS-cutoff-gated, $0 capital/$0 CU) ran its **first true out-of-sample window**:
+  - 29 OOS entropy_drop/roles signals, **26 closed trades**.
+  - **Win rate 27%** (vs 42% in-sample), **mean net −2.5%/trade** (vs +37%), **best trade only +3%** (in-sample edge was carried by +200–300% tail winners — NONE appeared), cumulative **−$6,444** @ $10k/trade, 0 deaths.
+  - **Read:** the in-sample edge has NOT replicated so far. The dropped win rate (42%→27%) is a negative signal independent of the tails; the absence of any winner is consistent EITHER with overfitting OR with the convex strategy's normal dry spell (≈1-in-6 chance of 0 winners in 26 trades by luck) + a quiet memecoin window. n=26 / 15 days is too small for a tail-dependent strategy to be conclusive, but the trajectory does NOT support deploying capital.
+  - **Operational:** Windows scheduled task `H9PaperTrade` runs the harness every 12h (StartWhenAvailable → catches up after reboot/update); state writes are atomic + .bak-backed. Record accumulates hands-off. WATCH: (1) does any tail winner appear, (2) does win rate recover toward 42% or hold ~27%.
+  - **Financier relevance:** this live paper record is the concrete, non-theoretical argument against trading real capital now — the strategy is currently DOWN over the exact period capital deployment was being pushed.

@@ -78,3 +78,7 @@ reversal criteria become path-locks.
 | D-014 | Phase 2 go-live; EXP-002 deployment authorized (7-day run on Base + Arb + OP) | 2026-05-16 | ACTIVE |
 | D-015 | Alchemy CU budget for EXP-002 — measured 1.5 req/s aggregate, ~34% utilization. Resolves UNK-003. | 2026-05-17 | ACTIVE |
 | D-016 | Two-level WS reconnect: PoolMonitor escalation after K stalls + ChainMonitor recycles WS via async-with re-entry. Architectural fix for FAILURE_LOG 2026-05-21. | 2026-05-21 | ACTIVE |
+| D-017 | WebSocket subscription lifecycle: transport tracks `_active_sub_id` and unsubscribes before re-subscribing + on iterator exit. Fixes 2026-05-24 CU spike (newHeads subscription leak, peak ~170 active subs on Base). | 2026-05-25 | ACTIVE |
+| D-018 | UNK-002 reversal — MSUSD/USDC arb DID reopen (2 reopenings in EXP-002, open windows 6-8h, inter-burst gaps 4-5 days). D-008's RESOLVED status REVERSED. | 2026-05-25 | ACTIVE |
+| D-019 | H2 → SUPPORTED-WITH-CAVEAT (4.01% overall / 84.5% cross-chain hard-flag rate, concentrated on rule_2 + one Arbitrum WETH/USDC Slipstream pool). H3 now testable. | 2026-05-25 | ACTIVE |
+| D-020 | Phase 3 multi-lens engine spec approved (`PHASE_3_MULTI_LENS_ENGINE_SPEC.md`); engine ships as separate `engine/` package; bloxroute migration deferred to Phase 4. | 2026-05-25 | ACTIVE |

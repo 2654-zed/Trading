@@ -66,4 +66,4 @@ Don't build cross-chain in this session. Complete EXP-001 first. After
 ## Links
 
 - Unknown: `../unknowns/UNKNOWNS.md` UNK-007 (bridge model)
-- Spec: `Desktop/Trading/LAYER3_TRADING_EXPERIMENT.md` §"What NOT to build"
+- Spec: `Desktop/Trading/docs/archive/LAYER3_TRADING_EXPERIMENT.md` §"What NOT to build"

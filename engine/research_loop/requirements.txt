@@ -1,0 +1,5 @@
+# research_loop — Quant/Critic/Coder loop, repurposed to forensic mempool data.
+langgraph>=0.2          # cyclic state-machine orchestration
+duckdb>=1.5             # measurement substrate (reads the JSONL archives in place)
+pydantic>=2             # typed state / gate schema
+anthropic>=0.40         # LIVE runs only — NOT needed for --mock or the test suite

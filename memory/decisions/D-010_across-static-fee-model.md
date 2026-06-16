@@ -144,7 +144,7 @@ Implications:
 
 ## Links
 
-- Approving spec: `../../PHASE_2_CROSS_CHAIN_SPEC.md` sub-phase 2.4
+- Approving spec: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` sub-phase 2.4
 - Bridge model premise: `D-006_bridge-model-across.md`
 - Phase 2 umbrella: `D-009_phase-2-cross-chain-spec-approved.md`
 - I-13 source: `../INVARIANTS.md`

@@ -131,7 +131,7 @@ stale under its per-table threshold" (rather than "any table older than
 
 ## Links
 
-- Spec sub-phase: `../../PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.6
+- Spec sub-phase: `../../docs/archive/PHASE_2_CROSS_CHAIN_SPEC.md` § sub-phase 2.6
 - Linked UNK: `../unknowns/UNKNOWNS.md` UNK-005
 - Phase 1 replay: `../../run_artifacts/exp_001/2026-05-13.jsonl`
   (2,420 records — 100% Phase 1 degraded, 0% Phase 2 fully degraded)
