@@ -26,6 +26,12 @@ vol (+1.4pp R², partial corr +0.13, high-liq-burst → higher forward vol in 10
 vol-deciles). So it's **not** dead on power and **not** a pure vol artifact. Remaining
 cheap kill: **K3 (placebo lead-lag)**; then the real build (Gate A with event-clustered
 inference + a concrete trading expression).
+**K3-lite (2026-06-20) does NOT clear:** residualized on the vol *level*, the K2 edge is a
+**volatility nowcast** (fragility marks *current* vol), not a forward cascade-**acceleration**
+predictor; non-liq features (OI/funding) are flat. **Net Phase-0 read: a thin *defensive*
+vol-filter at best (≈ vol-targeting), NOT the offensive cascade alpha** — a documented
+**lean-NO-GO** for the alpha thesis. The only untested upside is **K3-full** (book-resilience
+features, the heavy book pull); pursue only if that specific edge is worth the build.
 
 ## Why this one at all
 On-chain liquidation **capture** is a saturated MEV latency race — dead for us
@@ -75,6 +81,16 @@ Run these on a small slice of recorded data before spending a week building. Any
   (book-depth thinning, OI-ROC, funding) lead the gap **after partialling out
   contemporaneous vol**, AND do **not** lead matched-vol calm **placebo** timestamps
   equally. If the vol-residualized lead vanishes or the placebo leads as much → NO-GO.
+  **→ K3-LITE MEASURED 2026-06-20 (`engine/scripts/liq_k3_lite.py`):** label = price-only
+  vol *acceleration* (next-1h ÷ trailing-1h vol) + vol-matched permutation placebo. Result:
+  liq-burst corr=−0.08, OI-ROC=−0.18, |funding|≈0 — once you residualize on the vol
+  **level**, the K2 edge collapses into **vol mean-reversion** + liq-burst as a *coincident*
+  vol marker; **non-liquidation features (OI-ROC, funding) show no clean forward lead**, and
+  the within-regime liq-burst effect (+17σ vs placebo) is economically negligible (~1pp).
+  **K3-lite does NOT clear.** Reconciles with K2 → fragility is a **volatility NOWCAST, not a
+  cascade-acceleration predictor**: supports a *defensive* risk filter (≈ what vol-targeting
+  already gives), undercuts the *offensive* predict-&-fade-the-cascade alpha. Only untested
+  upside: **K3-full** = book-resilience features (heavy `incremental_book_L2` pull).
 
 > K1–K3 directly attack the three most-likely false-GO paths (small-N, vol artifact,
 > circularity) for the price of a few scripts. Most of the expected value of this
