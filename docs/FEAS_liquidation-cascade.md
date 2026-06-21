@@ -17,6 +17,12 @@ gate's n_obs≥30-*independent* requirement). So we **front-load the kill-tests*
 only build the pipeline if all three survive. A documented NO-GO is the expected,
 acceptable outcome.
 
+**Update (2026-06-20) — K1 measured, and it CLEARS.** The original "dead on power"
+fear assumed the mega-cascades as the sample. On the *reframed* moderate-episode
+target, the key's accessible window (Feb–Jun 2026) holds **~30 independent moderate
+stress episodes / ~13 major, ~7 in a holdout** (see K1 below). So the binding
+question is no longer power — it's **K2/K3: is the signal real or just volatility.**
+
 ## Why this one at all
 On-chain liquidation **capture** is a saturated MEV latency race — dead for us
 (Chainlink SVR internalizes ~99% of the OEV). Perp/CEX **cascades** are a *data*
@@ -43,6 +49,13 @@ Run these on a small slice of recorded data before spending a week building. Any
   **6–8 independent events.** Apply a time-split → **~2–3 land OOS.** If that can't
   honestly meet the gate's independent-event floor, the **event-level alpha framing
   is dead on power** — reframe to episode-level (below) or stop.
+  **→ MEASURED 2026-06-20 (`engine/scripts/liq_k1_census.py`):** the key's accessible
+  window (2026-02-14→06-19; $3.77B BTC liquidations, 144,819 prints) holds **~30
+  independent moderate-stress episodes (>p95/hr) / ~13 major (>p99/hr), ~7 in a
+  last-20% holdout** — clears the gate's ≥2/side floor. **K1 PASSES** on the reframed
+  moderate-episode target. Caveats: power is *modest* not abundant; and these are
+  moderate stresses — the true mega-cascades (Oct-2025 etc.) stay out of reach without
+  buying historical Tardis months. Binding kills now = **K2 + K3.**
 - **K2 · Vol-ablation (one regression).** On ONE known cascade, regress forward
   adverse move on **EWMA/GARCH realized vol alone.** If vol-only captures most of
   what "fragility" would, the edge is a **vol artifact** → NO-GO.
