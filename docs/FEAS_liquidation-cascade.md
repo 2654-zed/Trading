@@ -17,6 +17,22 @@ gate's n_obs≥30-*independent* requirement). So we **front-load the kill-tests*
 only build the pipeline if all three survive. A documented NO-GO is the expected,
 acceptable outcome.
 
+**Update (2026-06-20) — K1 measured, and it CLEARS.** The original "dead on power"
+fear assumed the mega-cascades as the sample. On the *reframed* moderate-episode
+target, the key's accessible window (Feb–Jun 2026) holds **~30 independent moderate
+stress episodes / ~13 major, ~7 in a holdout** (see K1 below). **K2 (vol-ablation)
+now also CLEARS** — fragility adds a *modest but consistent* increment beyond realized
+vol (+1.4pp R², partial corr +0.13, high-liq-burst → higher forward vol in 10/10
+vol-deciles). So it's **not** dead on power and **not** a pure vol artifact. Remaining
+cheap kill: **K3 (placebo lead-lag)**; then the real build (Gate A with event-clustered
+inference + a concrete trading expression).
+**K3-lite (2026-06-20) does NOT clear:** residualized on the vol *level*, the K2 edge is a
+**volatility nowcast** (fragility marks *current* vol), not a forward cascade-**acceleration**
+predictor; non-liq features (OI/funding) are flat. **Net Phase-0 read: a thin *defensive*
+vol-filter at best (≈ vol-targeting), NOT the offensive cascade alpha** — a documented
+**lean-NO-GO** for the alpha thesis. The only untested upside is **K3-full** (book-resilience
+features, the heavy book pull); pursue only if that specific edge is worth the build.
+
 ## Why this one at all
 On-chain liquidation **capture** is a saturated MEV latency race — dead for us
 (Chainlink SVR internalizes ~99% of the OEV). Perp/CEX **cascades** are a *data*
@@ -43,15 +59,38 @@ Run these on a small slice of recorded data before spending a week building. Any
   **6–8 independent events.** Apply a time-split → **~2–3 land OOS.** If that can't
   honestly meet the gate's independent-event floor, the **event-level alpha framing
   is dead on power** — reframe to episode-level (below) or stop.
+  **→ MEASURED 2026-06-20 (`engine/scripts/liq_k1_census.py`):** the key's accessible
+  window (2026-02-14→06-19; $3.77B BTC liquidations, 144,819 prints) holds **~30
+  independent moderate-stress episodes (>p95/hr) / ~13 major (>p99/hr), ~7 in a
+  last-20% holdout** — clears the gate's ≥2/side floor. **K1 PASSES** on the reframed
+  moderate-episode target. Caveats: power is *modest* not abundant; and these are
+  moderate stresses — the true mega-cascades (Oct-2025 etc.) stay out of reach without
+  buying historical Tardis months. Binding kills now = **K2 + K3.**
 - **K2 · Vol-ablation (one regression).** On ONE known cascade, regress forward
   adverse move on **EWMA/GARCH realized vol alone.** If vol-only captures most of
   what "fragility" would, the edge is a **vol artifact** → NO-GO.
+  **→ MEASURED 2026-06-20 (`engine/scripts/liq_k2_ablation.py`, 36,252 5-min bars):**
+  current realized vol explains R²=0.30 of next-hour vol; +fragility (liq-burst, |OI-ROC|)
+  → R²=0.31 (**incremental +1.4pp**); partial corr(liq-burst, fwd | rv)=**+0.13**;
+  high-liq-burst bars show higher forward vol in **10/10 realized-vol deciles**.
+  **K2 PASSES** — fragility is not just repackaged vol, but the edge is **modest**, and
+  this is descriptive (autocorrelated bars; event-clustered inference deferred to Gate A).
 - **K3 · Placebo-controlled, vol-residualized lead-lag.** Define the label from
   **price primitives only** (fwd adverse move > k·rolling-vol on mark/trade prices —
   *never* from a liquidation series). Test whether **non-liquidation** features
   (book-depth thinning, OI-ROC, funding) lead the gap **after partialling out
   contemporaneous vol**, AND do **not** lead matched-vol calm **placebo** timestamps
   equally. If the vol-residualized lead vanishes or the placebo leads as much → NO-GO.
+  **→ K3-LITE MEASURED 2026-06-20 (`engine/scripts/liq_k3_lite.py`):** label = price-only
+  vol *acceleration* (next-1h ÷ trailing-1h vol) + vol-matched permutation placebo. Result:
+  liq-burst corr=−0.08, OI-ROC=−0.18, |funding|≈0 — once you residualize on the vol
+  **level**, the K2 edge collapses into **vol mean-reversion** + liq-burst as a *coincident*
+  vol marker; **non-liquidation features (OI-ROC, funding) show no clean forward lead**, and
+  the within-regime liq-burst effect (+17σ vs placebo) is economically negligible (~1pp).
+  **K3-lite does NOT clear.** Reconciles with K2 → fragility is a **volatility NOWCAST, not a
+  cascade-acceleration predictor**: supports a *defensive* risk filter (≈ what vol-targeting
+  already gives), undercuts the *offensive* predict-&-fade-the-cascade alpha. Only untested
+  upside: **K3-full** = book-resilience features (heavy `incremental_book_L2` pull).
 
 > K1–K3 directly attack the three most-likely false-GO paths (small-N, vol artifact,
 > circularity) for the price of a few scripts. Most of the expected value of this
