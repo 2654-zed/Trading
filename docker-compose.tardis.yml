@@ -1,0 +1,25 @@
+# tardis-machine — local Tardis.dev server for normalized historical REPLAY and
+# real-time STREAM. This is the seamless backbone: run it once and point any
+# consumer (backtest or live) at the SAME normalized message format.
+#
+#   1. Put TARDIS_DEV=<key> in .env (compose auto-loads .env from this dir).
+#   2. docker compose -f docker-compose.tardis.yml up
+#   3. HTTP API on :8000, WebSocket on :8001.
+#        historical replay:  ws://localhost:8001/ws-replay-normalized   (and POST /replay-normalized)
+#        live stream:        ws://localhost:8001/ws-stream-normalized
+#      Replay and live are WIRE-COMPATIBLE — one consumer, backtest == live.
+#
+# Docs: https://docs.tardis.dev/tardis-machine
+services:
+  tardis-machine:
+    image: tardisdev/tardis-machine
+    environment:
+      # compose substitutes ${TARDIS_DEV} from .env; tardis-machine reads TM_API_KEY.
+      - TM_API_KEY=${TARDIS_DEV}
+    ports:
+      - "8000:8000"   # HTTP
+      - "8001:8001"   # WebSocket (HTTP port + 1)
+    volumes:
+      # persist the on-disk cache so re-replays are free. Under engine/data/ -> gitignored.
+      - ./engine/data/tardis-cache:/.cache
+    restart: unless-stopped
