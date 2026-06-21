@@ -22,7 +22,8 @@ from pathlib import Path
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()  # load .env from cwd/parents if present; harmless if absent
+    load_dotenv()  # .env from cwd upward
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)  # repo-root .env, robust to cwd
 except ImportError:  # python-dotenv optional — env vars still work
     pass
 
@@ -67,16 +68,16 @@ def pull(
     Re-pulls skip files already on disk. Returns the download directory.
     The API key is read from env and never printed.
     """
-    from tardis_dev import datasets  # imported lazily so the module loads without the dep
+    from tardis_dev import download_datasets  # top-level fn in tardis-dev 4.x
 
     out = Path(download_dir or CACHE_DIR)
     out.mkdir(parents=True, exist_ok=True)
-    datasets.download(
+    download_datasets(
         exchange=exchange,
         data_types=list(data_types or DEFAULT_DATA_TYPES),
+        symbols=[s.lower() for s in symbols],
         from_date=from_date,
         to_date=to_date,
-        symbols=[s.lower() for s in symbols],
         api_key=_api_key(),
         download_dir=str(out),
     )

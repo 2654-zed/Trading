@@ -8,7 +8,7 @@
 ```bash
 cp .env.example .env            # then paste the real TARDIS_DEV key (shared via the vault, NOT the repo)
 pip install -r engine/cex/requirements.txt
-python -m engine.scripts.tardis_pull --from 2025-10-08 --to 2025-10-13   # data -> engine/data/tardis/ (gitignored)
+python -m engine.scripts.tardis_pull --from 2026-06-10 --to 2026-06-11   # data -> engine/data/tardis/ (gitignored)
 ```
 …or, for a normalized replay/live server that one consumer can use for **both**
 backtest and live:
@@ -71,3 +71,30 @@ fragility model) consumes the **normalized** Tardis format. Targeting tardis-mac
 normalized replay means the *same consumer code* runs the offline backtest and the
 live stream. The existing raw `handoff/l2_collector.py` becomes optional live
 redundancy.
+
+## Verified run + key scope + env notes (2026-06-20)
+Smoke-tested end to end — `tardis_io.pull(...)` downloaded `binance-futures`
+`liquidations` + `derivative_ticker` for BTCUSDT (real rows) to `engine/data/tardis/`.
+
+- **API:** `tardis-dev` installs as **v4.x**, whose downloader is the top-level
+  **`download_datasets(...)`** (not `datasets.download`) — `tardis_io.py` uses it.
+- **KEY ACCESS SCOPE — important.** This key grants **pro/unlimited access to ALL
+  exchanges and all data types**, but only within a **date window of 2026-02-14 →
+  2026-07-15** (≈ "since the subscription started", through expiry). **Data before
+  ~Feb 2026 is NOT accessible** — including the Oct-10/11-2025 and Nov-2025 cascades
+  the liquidation FEAS was built around; studying those needs buying historical
+  months from Tardis. (Check scope anytime via the `apiKeyAccessInfo` array in a 401
+  body, or `tardis_dev.get_exchange_details`.)
+  → **Consequence for [FEAS_liquidation-cascade.md](FEAS_liquidation-cascade.md):** Phase-0's power
+  census (K1) now runs over a ~4-month *recent* window, not all-history — almost
+  certainly **too few independent cascades**, which tightens the likely NO-GO.
+  Game-3 microstructure (recent data) is unaffected.
+- **Env gotcha 1 — `.env` location.** The key is currently in
+  `layer3_trading_exp/.env` (legacy subdir), where `load_dotenv()` / `docker compose`
+  don't look. **Put `TARDIS_DEV` in a repo-root `.env`** (the kit now also loads the
+  repo-root `.env` explicitly).
+- **Env gotcha 2 — interpreter.** `tardis-dev` installed into Microsoft Store Python
+  3.13 while the project runs on pythoncore 3.14 — that's why other scripts couldn't
+  see it. **Standardize on a venv:** create one, `pip install -r
+  engine/cex/requirements.txt` into it, and run the Tardis tooling from that venv so
+  deps are consistent for everyone.
