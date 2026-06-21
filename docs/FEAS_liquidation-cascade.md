@@ -20,8 +20,12 @@ acceptable outcome.
 **Update (2026-06-20) — K1 measured, and it CLEARS.** The original "dead on power"
 fear assumed the mega-cascades as the sample. On the *reframed* moderate-episode
 target, the key's accessible window (Feb–Jun 2026) holds **~30 independent moderate
-stress episodes / ~13 major, ~7 in a holdout** (see K1 below). So the binding
-question is no longer power — it's **K2/K3: is the signal real or just volatility.**
+stress episodes / ~13 major, ~7 in a holdout** (see K1 below). **K2 (vol-ablation)
+now also CLEARS** — fragility adds a *modest but consistent* increment beyond realized
+vol (+1.4pp R², partial corr +0.13, high-liq-burst → higher forward vol in 10/10
+vol-deciles). So it's **not** dead on power and **not** a pure vol artifact. Remaining
+cheap kill: **K3 (placebo lead-lag)**; then the real build (Gate A with event-clustered
+inference + a concrete trading expression).
 
 ## Why this one at all
 On-chain liquidation **capture** is a saturated MEV latency race — dead for us
@@ -59,6 +63,12 @@ Run these on a small slice of recorded data before spending a week building. Any
 - **K2 · Vol-ablation (one regression).** On ONE known cascade, regress forward
   adverse move on **EWMA/GARCH realized vol alone.** If vol-only captures most of
   what "fragility" would, the edge is a **vol artifact** → NO-GO.
+  **→ MEASURED 2026-06-20 (`engine/scripts/liq_k2_ablation.py`, 36,252 5-min bars):**
+  current realized vol explains R²=0.30 of next-hour vol; +fragility (liq-burst, |OI-ROC|)
+  → R²=0.31 (**incremental +1.4pp**); partial corr(liq-burst, fwd | rv)=**+0.13**;
+  high-liq-burst bars show higher forward vol in **10/10 realized-vol deciles**.
+  **K2 PASSES** — fragility is not just repackaged vol, but the edge is **modest**, and
+  this is descriptive (autocorrelated bars; event-clustered inference deferred to Gate A).
 - **K3 · Placebo-controlled, vol-residualized lead-lag.** Define the label from
   **price primitives only** (fwd adverse move > k·rolling-vol on mark/trade prices —
   *never* from a liquidation series). Test whether **non-liquidation** features
