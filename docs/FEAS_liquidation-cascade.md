@@ -32,6 +32,15 @@ predictor; non-liq features (OI/funding) are flat. **Net Phase-0 read: a thin *d
 vol-filter at best (≈ vol-targeting), NOT the offensive cascade alpha** — a documented
 **lean-NO-GO** for the alpha thesis. The only untested upside is **K3-full** (book-resilience
 features, the heavy book pull); pursue only if that specific edge is worth the build.
+**K3-full RAN (2026-06-20) — also does NOT clear:** on 6 days (3 stress + 3 calm, 49k 10s
+bars of `book_snapshot_25`) near-touch depth **thinness/thinning show ~zero, slightly
+*wrong-signed* lead** on vol-acceleration (−0.03 / −0.00; −5.5 sd vs vol-matched placebo;
+same on stress and calm). **→ Across ALL candidate features — liq-burst, OI, funding, AND
+book depth-resilience — none gives a clean forward lead beyond vol. PHASE-0 VERDICT:
+documented NO-GO on the offensive cascade-prediction alpha.** Residual = a marginal
+*defensive* vol-filter (≈ vol-targeting). Only untested remnant: refill-rate/quote-life from
+the *full* `incremental_book_L2`+`trades` stream — a real build with a **now-low prior**
+(consistent with the trader lens's "displayed depth is a mirage"); not obligated. **Recommend: stop.**
 
 ## Why this one at all
 On-chain liquidation **capture** is a saturated MEV latency race — dead for us
@@ -91,6 +100,12 @@ Run these on a small slice of recorded data before spending a week building. Any
   cascade-acceleration predictor**: supports a *defensive* risk filter (≈ what vol-targeting
   already gives), undercuts the *offensive* predict-&-fade-the-cascade alpha. Only untested
   upside: **K3-full** = book-resilience features (heavy `incremental_book_L2` pull).
+  **→ K3-FULL RAN 2026-06-20 (`engine/scripts/liq_k3_full.py`, `book_snapshot_25`, 6 days /
+  49k bars):** near-touch depth **thinness** corr w/ vol-acceleration = **−0.03**, **thinning-rate
+  = −0.00** (slightly wrong-signed, **−5.5 sd** vs vol-matched placebo; identical on stress &
+  calm). **No book-resilience lead — does NOT survive.** Consistent with "displayed depth is
+  gamed / a mirage." Only untested remnant: refill-rate / quote-life from the *full* L2 event
+  stream (a real build, low prior). **Phase-0 net = documented NO-GO on the cascade alpha.**
 
 > K1–K3 directly attack the three most-likely false-GO paths (small-N, vol artifact,
 > circularity) for the price of a few scripts. Most of the expected value of this
