@@ -27,14 +27,15 @@ documented **NO-GO is an acceptable result**; a curve-fit "yes" is not.
 ## High-level roadmap (milestones)
 - **M0 ✅ Pick the game.** Chose Game 3 (CEX order-book microstructure) over on-chain MEV (measured uneconomical) and factor alpha (deferred). See [DECIDE](handoff/DECIDE_pick-one-game.md).
 - **M1 ◻ Assemble the CEX L2 dataset** — Tardis Pro history + live collector going forward.
-- **M2 ◻ Reconstruction + "price-pressure" pipeline** — turn raw L2 into order-book imbalance / depth features.
-- **M3 ◻ Pre-register the hypothesis** — imbalance → short-horizon move; define universe, horizon, and a realistic cost model *before* looking at returns.
-- **M4 ◻ Test through the gate** — sealed holdout, sign-must-hold, multiple-testing correction → **GO (paper trade)** or **documented NO-GO**.
+- **M2 ✅ Reconstruction + "price-pressure" pipeline** — OBI/depth features from Tardis `book_snapshot_25` (`engine/scripts/game3_imbalance.py`).
+- **M3 ✅ Pre-registered** — imbalance → signed short-horizon move, with a realistic **taker cost model** (the decisive term).
+- **M4 ✅ Tested → documented NO-GO (2026-06-20).** Day-blocked IS/OOS: OBI predicts direction and the **sign holds OOS at every horizon**, but the edge (~0.3–0.8 bps) is **~10–25× below taker fees (~8 bps round-trip)** → real but **maker-only**, untradeable from our (taker) seat. See [FEAS_game3-imbalance.md](docs/FEAS_game3-imbalance.md).
 - **(Phase 2, optional) CEX↔DEX bridge** — relate Tardis to bloXroute for price-discovery/lead-lag, *only if* M4 shows promise.
 
 ## Status
-- **At M1→M2.** Game 3 chosen; Tardis Pro acquired; `l2_collector` built, smoke-tested (3 exchanges, real depth), and handed to the engineer to run on their machine; the sealed-holdout research harness is built + tested (286 repo tests green).
-- **Being worked on now:** the reconstruction + imbalance analyzer (M2) — the bridge from raw L2 to a testable price-pressure signal.
+- **Game 3 core question ANSWERED (2026-06-20): documented NO-GO for our position.** Order-book imbalance is a real, OOS-stable signal but lives **inside taker fees** (maker-only). The liquidation-cascade extension is also a NO-GO ([FEAS_liquidation-cascade.md](docs/FEAS_liquidation-cascade.md) — vol nowcast, no acceleration lead). Tardis Pro wired (`TARDIS_DEV`); puller + engineer onboarding shipped; ~660 MB book/liq/ticker cached.
+- **Through-line across ALL branches** (MEV, drains, liquidations, imbalance): every edge we find is **positional** — real but requiring a seat (maker / colocation / builder access) we don't have. Our position can *see* the edges but can't *capture* them.
+- **Only direction left whose edge isn't gated by our seat:** the deferred **factor / carry** work (mid-horizon, survivorship-controlled, not latency/fee-bound) — `engine/research_loop/factor_*`. **Decision pending: pursue the factor pivot, or wind down.**
 
 ## Open questions / discussions
 _(Each becomes a GitHub Issue — discuss there, link here, fold the answer back in.)_
