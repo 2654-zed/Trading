@@ -89,6 +89,23 @@ slippage + funding cashflow; **(c)** **forbid the short leg from capturing the �
 **no chance**, and you've reached NO-GO for **$0**. This is the factor analog of the synthetic kill
 that ended the liquidation thread — **run it first.**
 
+**→ K0 RAN 2026-06-20 (`engine/scripts/factor_k0_kill.py`) — NO-GO confirmed for $0:**
+- **The harness issues a GO on PURE NOISE 100% of the time (30/30).** Its sign-*consistency*
+  criterion + flat-daily-cost (which makes any series a reliable loser) + daily `n_obs` flag
+  random noise as a "consistent signal." A GO from the current factor code is **worthless**.
+- The **honest** gate (monthly `n_obs`, size/ADV cost, positive-profit + full-grid Bonferroni)
+  correctly **rejects noise (0/30)** and detects strong injected edges — well-calibrated, not broken.
+- **But a realistic edge is statistically UNCONFIRMABLE on a buyable history:** a ~0.5 net
+  Sharpe needs **~16 years** for single-test significance; with crypto's ~5–8yr usable history
+  *plus* multiple-testing, **no honest method can confirm it** (honest gate needs IS Sharpe ≳ 1.8).
+- **Bug found:** the harness's momentum fixture is explosive (`0.15 × 20d-sum` → gain 3 → 1e64);
+  the gate checks sign-consistency, not profitability (a reliable *loser* passes).
+
+→ **$0 NO-GO:** the harness can't be trusted, **and** a realistic crypto factor edge can't be
+confirmed on the available data anyway. **Don't buy the data.** The factor pivot joins the
+documented NO-GOs — and it's the most fundamental: *even the un-gated direction has no
+confirmable edge for our history/budget.*
+
 ## Two gates (either fails → NO-GO)
 - **Gate A — Survivable edge.** Does a candidate factor clear a **survivorship-free,
   cost-aware, OOS** test with the **sign holding** and a **net Sharpe materially > 0** (and,
