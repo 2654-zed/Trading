@@ -35,7 +35,14 @@ documented **NO-GO is an acceptable result**; a curve-fit "yes" is not.
 ## Status
 - **Game 3 core question ANSWERED (2026-06-20): documented NO-GO for our position.** Order-book imbalance is a real, OOS-stable signal but lives **inside taker fees** (maker-only). The liquidation-cascade extension is also a NO-GO ([FEAS_liquidation-cascade.md](docs/FEAS_liquidation-cascade.md) — vol nowcast, no acceleration lead). Tardis Pro wired (`TARDIS_DEV`); puller + engineer onboarding shipped; ~660 MB book/liq/ticker cached.
 - **Through-line across ALL branches** (MEV, drains, liquidations, imbalance): every edge we find is **positional** — real but requiring a seat (maker / colocation / builder access) we don't have. Our position can *see* the edges but can't *capture* them.
-- **Only direction left whose edge isn't gated by our seat:** the deferred **factor / carry** work (mid-horizon, survivorship-controlled, not latency/fee-bound) — `engine/research_loop/factor_*`. **Decision pending: pursue the factor pivot, or wind down.**
+- **Factor pivot — also NO-GO (2026-06-20, $0 K0 kill).** The one direction *not* gated by our
+  seat fails on **statistics**: a realistic ~0.5-Sharpe crypto factor is unconfirmable on a
+  buyable history (~16yr needed single-test; worse with multiple-testing), and the existing
+  harness false-GOs pure noise 100% of the time. See [FEAS_factor-pivot.md](docs/FEAS_factor-pivot.md).
+- **Every branch is now a documented NO-GO** (L3 labels, multi-lens, MEV/backruns, drains,
+  liquidations, order-book imbalance, factor): microstructure edges fail on **position**, the
+  factor edge fails on **confirmability**. **From this seat + history + budget, there is no
+  demonstrated, capturable, confirmable edge.** → **Decision: wind down** (capstone pending).
 
 ## Open questions / discussions
 _(Each becomes a GitHub Issue — discuss there, link here, fold the answer back in.)_
